@@ -17,6 +17,7 @@ See `./ips2plant-sh -h` or `.\ips2plantDocker.bat <repos_path> -h`
 
 ## Attribute Types
 Attribute visibility markers are misused for Faktor-IPS attribute types:
+
 ![Attribute Type Legend](docu/attr_type_legend.png)
 
 ## Example
