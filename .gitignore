@@ -1,8 +1,4 @@
 .idea/
-/f10/plantUml/ips2plantCollection.xml
-/f10/plantUml/workdir/
-/f10/plantUml/output/
-/f10/cypher/output/
-/f10/cypher/ips2plantCollection.xml
-/f10/cypher/ips2plantWorkdir/
-/f10/sandbox/
+/workdir/
+/output/
+/sandbox/
