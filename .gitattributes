@@ -1,0 +1,2 @@
+# Make sure, .sh files always have lf ending
+*.sh text eol=lf
