@@ -2,18 +2,32 @@
 
 A bash script using XSL to create plantUml class diagrams from [Faktor-IPS](https://github.com/faktorips) model classes.
 
-## Prerequisites
+## Java Version
+
+There is now a java implementation available, so that you don't have to use Linux/WSL/Docker and xsltproc 
+(but you still can, if you want to). 
+
+### Notes
+* For multiple model paths, please use the -p flag for each path (e.g. '-p some/path -p another/path ...')  
+* In the java version, there is no working directory, so you can't (for now) make multiple puml files from the same XML.
+
+### Usage
+See `./jips2plant.sh -h`
+
+## Old Bash/Linux Version
+
+### Prerequisites
 * You are using Linux, Mac, or WSL with xsltproc installed 
 * OR you have docker installed
 * You know where to find your Faktor-IPS model classes :)
 
-## Using in Docker
+### Using in Docker
 * Build the Dockerfile:  `docker build . -t alpine-ips2plant`
 * In Windows: use the batch script `ips2plantDocker.bat`
 * **Please observe:** since the path to your IPS repository must be mounted as well as the scripts, the `ips2plantDocker.bat` script requires that you add the repository path as the first argument and use `/repos/` as prefix for your paths, e.g. `ips2plantDocker.bat C:\Users\me\whatever -p "/repos/im/domain/model ..."`
 
-## Usage
-See `./ips2plant-sh -h` or `.\ips2plantDocker.bat <repos_path> -h`
+### Usage
+See `./ips2plant.sh -h` or `.\ips2plantDocker.bat <repos_path> -h`
 
 ## Attribute Types
 Attribute visibility markers are misused for Faktor-IPS attribute types:

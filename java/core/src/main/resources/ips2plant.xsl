@@ -28,6 +28,7 @@
 
     <xsl:template match="/">
         <xsl:text>@startuml&#xa;</xsl:text>
+        <xsl:text>hide empty members&#xa;</xsl:text>
         <xsl:apply-templates/>
         <xsl:text>@enduml</xsl:text>
     </xsl:template>

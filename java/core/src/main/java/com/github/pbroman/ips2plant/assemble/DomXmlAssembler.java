@@ -31,7 +31,6 @@ public class DomXmlAssembler implements XmlAssembler {
             writeToDestination(collection, destination);
 
         } catch (ParserConfigurationException | IOException | SAXException | TransformerException e) {
-            // TODO
             throw new RuntimeException(e);
         }
     }

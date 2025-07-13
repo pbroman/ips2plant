@@ -2,10 +2,6 @@ package com.github.pbroman.ips2plant.xslt;
 
 import java.nio.file.Path;
 import java.util.Map;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 import com.github.pbroman.ips2plant.api.XsltProcessor;
 import net.sf.saxon.s9api.Processor;
@@ -33,7 +29,7 @@ public class SaxonXsltProcessor implements XsltProcessor {
             xsltTransformer.transform();
 
         } catch (SaxonApiException e) {
-            // TODO
+            throw new RuntimeException(e);
         }
     }
 }

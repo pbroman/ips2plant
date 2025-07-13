@@ -24,7 +24,6 @@ public class DefaultXsltProcessor implements XsltProcessor {
             transformer.transform(xmlSource, destination);
 
         } catch (TransformerException e) {
-            // TODO
             throw new RuntimeException(e);
         }
     }
