@@ -2,3 +2,5 @@
 /workdir/
 /output/
 /sandbox/
+*.iml
+target/
