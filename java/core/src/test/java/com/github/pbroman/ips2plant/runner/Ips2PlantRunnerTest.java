@@ -1,4 +1,4 @@
-package com.github.pbroman.ips2plant.kyverno;
+package com.github.pbroman.ips2plant.runner;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -9,7 +9,6 @@ There is now a java implementation available, so that you don't have to use Linu
 
 ### Notes
 * For multiple model paths, please use the -p flag for each path (e.g. '-p some/path -p another/path ...')  
-* In the java version, there is no working directory, so you can't (for now) make multiple puml files from the same XML.
 
 ### Usage
 See `./jips2plant.sh -h`

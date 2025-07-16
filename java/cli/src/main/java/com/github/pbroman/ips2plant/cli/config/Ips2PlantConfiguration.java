@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import com.github.pbroman.ips2plant.assemble.DomXmlAssembler;
 import com.github.pbroman.ips2plant.cli.command.Ips2PlantCommand;
 import com.github.pbroman.ips2plant.collect.DefaultIpsFileCollector;
-import com.github.pbroman.ips2plant.kyverno.Ips2PlantRunner;
+import com.github.pbroman.ips2plant.runner.Ips2PlantRunner;
 import com.github.pbroman.ips2plant.xslt.SaxonXsltProcessor;
 
 public class Ips2PlantConfiguration {

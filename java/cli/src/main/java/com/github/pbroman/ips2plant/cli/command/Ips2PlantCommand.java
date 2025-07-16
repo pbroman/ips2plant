@@ -8,7 +8,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.github.pbroman.ips2plant.kyverno.Ips2PlantRunner;
+import com.github.pbroman.ips2plant.runner.Ips2PlantRunner;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 
@@ -22,6 +22,7 @@ public class Ips2PlantCommand implements Callable<Integer> {
     private final Map<String, String> xsltParams = new HashMap<>();
     private List<Path> modelDirPaths;
     private Path destination;
+    private Path workdir;
 
     public Ips2PlantCommand(Ips2PlantRunner runner) {
         this.ips2PlantRunner = runner;
@@ -29,7 +30,7 @@ public class Ips2PlantCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        ips2PlantRunner.execute(modelDirPaths, xsltParams, destination);
+        ips2PlantRunner.execute(modelDirPaths, xsltParams, destination, workdir);
         return 0;
     }
 
@@ -104,6 +105,11 @@ public class Ips2PlantCommand implements Callable<Integer> {
     @Option(names = {"-o", "--output"}, description = "Output file path (should have .puml suffix)")
     private void setOutput(String output) {
         destination = Path.of(output);
+    }
+
+    @Option(names = {"-w", "--workdir"}, description = "Workdir for the collection.xml (optional)")
+    private void setWorkdir(String workdir) {
+        this.workdir = Path.of(workdir);
     }
 
 }
