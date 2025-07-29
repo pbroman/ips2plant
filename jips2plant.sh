@@ -4,16 +4,10 @@ set -e
 
 PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P)
 
-TARGET_PATH=$PARENT_PATH/java/cli/target/
-JAR_NAME=ips2plant-cli.jar
-
-if [[ ! -f $TARGET_PATH$JAR_NAME ]]; then
-  echo "$JAR_NAME not found, executing mvn package"
-  mvn clean package -f $PARENT_PATH/java/pom.xml
-fi
+JAR_PATH=$PARENT_PATH/ips2plant-cli-runner.jar
 
 echo; echo "Running ips2plant"
 
-java -jar $TARGET_PATH$JAR_NAME "$@"
+java -jar $JAR_PATH "$@"
 
 echo "Finished with exit code $?"

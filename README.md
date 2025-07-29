@@ -4,8 +4,8 @@ A bash script using XSL to create plantUml class diagrams from [Faktor-IPS](http
 
 ## Java Version
 
-There is now a java implementation available, so that you don't have to use Linux/WSL/Docker and xsltproc 
-(but you still can, if you want to). 
+There is now a java implementation available, so that you don't have to use Linux/WSL/Docker and xsltproc. 
+(But you still can, if you want to. The bash version is faster ...). 
 
 ### Notes
 * For multiple model paths, please use the -p flag for each path (e.g. '-p some/path -p another/path ...')  
@@ -13,7 +13,7 @@ There is now a java implementation available, so that you don't have to use Linu
 ### Usage
 See `./jips2plant.sh -h`
 
-## Old Bash/Linux Version
+## Bash/Linux Version
 
 ### Prerequisites
 * You are using Linux, Mac, or WSL with xsltproc installed 
