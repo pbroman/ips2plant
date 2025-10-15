@@ -24,6 +24,7 @@
     <xsl:variable name="singleQuote">'</xsl:variable>
 
     <xsl:output method="text"/>
+    <xsl:strip-space elements="*"/>
 
     <xsl:template match="/">
         <xsl:apply-templates/>
