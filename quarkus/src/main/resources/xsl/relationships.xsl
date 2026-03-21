@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:f="urn:ips2plant:functions">
 
     <!-- Renders an enum type association arrow (dotted arrow to enum) -->
     <xsl:template name="enum-association">
@@ -8,13 +9,8 @@
         <xsl:variable name="isEnumPresent">
             <xsl:value-of select="../../EnumType[@className=$enumType]"/>
         </xsl:variable>
-        <xsl:variable name="enumTypePackaging">
-            <xsl:call-template name="packaging-selector">
-                <xsl:with-param name="clazz" select="$enumType" />
-            </xsl:call-template>
-        </xsl:variable>
         <xsl:if test="$isEnumPresent != '' and $showEnumAssociations">
-            <xsl:value-of select="concat($className, ' ', $dottedConnector, '> ', $enumTypePackaging, '&#xa;')"/>
+            <xsl:value-of select="concat($className, ' ', $dottedConnector, '> ', f:class-name($enumType), '&#xa;')"/>
         </xsl:if>
     </xsl:template>
 
@@ -22,21 +18,8 @@
     <xsl:template name="table-usage">
         <xsl:param name="tableStructure" />
         <xsl:param name="className" />
-        <xsl:variable name="isTablePresent">
-            <xsl:value-of select="../../../TableStructure[@className=$tableStructure]"/>
-        </xsl:variable>
-        <xsl:variable name="tableStructurePackaging">
-            <xsl:call-template name="packaging-selector">
-                <xsl:with-param name="clazz" select="$tableStructure" />
-            </xsl:call-template>
-        </xsl:variable>
-        <xsl:variable name="tableClassMatchesFilter">
-            <xsl:call-template name="matches-package-filter">
-                <xsl:with-param name="classNameWithPackage" select="$className"/>
-            </xsl:call-template>
-        </xsl:variable>
-        <xsl:if test="$tableClassMatchesFilter = 'true' and $showTableUsage">
-            <xsl:value-of select="concat($className, ' ', $dottedConnector, '{ ', $tableStructurePackaging, '&#xa;')"/>
+        <xsl:if test="f:matches-package-filter($className) and $showTableUsage">
+            <xsl:value-of select="concat($className, ' ', $dottedConnector, '{ ', f:class-name($tableStructure), '&#xa;')"/>
         </xsl:if>
     </xsl:template>
 
@@ -47,19 +30,9 @@
         <xsl:param name="supertypeAttr"/>
         <xsl:param name="isSupertypePresent"/>
 
-        <xsl:variable name="inheritanceMatchesFilter">
-            <xsl:call-template name="matches-package-filter">
-                <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
-            </xsl:call-template>
-        </xsl:variable>
-        <xsl:if test="$supertypeAttr and $inheritanceMatchesFilter = 'true'">
+        <xsl:if test="$supertypeAttr and f:matches-package-filter($classNameWithPackage)">
             <xsl:if test="$isSupertypePresent != '' or $addSuperType = 'true'">
-                <xsl:variable name="superType">
-                    <xsl:call-template name="packaging-selector">
-                        <xsl:with-param name="clazz" select="$supertypeAttr" />
-                    </xsl:call-template>
-                </xsl:variable>
-                <xsl:value-of select="concat($superType, ' &lt;|', $connector, ' ', $className, '&#xa;')"/>
+                <xsl:value-of select="concat(f:class-name($supertypeAttr), ' &lt;|', $connector, ' ', $className, '&#xa;')"/>
             </xsl:if>
         </xsl:if>
     </xsl:template>
@@ -75,20 +48,8 @@
                 <xsl:value-of select="../../PolicyCmptType[@className=$targetWithPackage]"/>
             </xsl:variable>
 
-            <xsl:variable name="visible">
-                <xsl:call-template name="is-relationship-visible">
-                    <xsl:with-param name="isTargetPresent" select="$isCompTargetPresent"/>
-                    <xsl:with-param name="sourceWithPackage" select="$classNameWithPackage"/>
-                    <xsl:with-param name="targetWithPackage" select="$targetWithPackage"/>
-                </xsl:call-template>
-            </xsl:variable>
-
-            <xsl:if test="$visible = '1'">
-                <xsl:variable name="target">
-                    <xsl:call-template name="packaging-selector">
-                        <xsl:with-param name="clazz" select="@target" />
-                    </xsl:call-template>
-                </xsl:variable>
+            <xsl:if test="f:is-relationship-visible($isCompTargetPresent, $classNameWithPackage, $targetWithPackage)">
+                <xsl:variable name="target" select="f:class-name(@target)"/>
 
                 <xsl:variable name="targetMin">
                     <xsl:value-of
@@ -119,11 +80,6 @@
 
         <xsl:for-each select="Association[@associationType='ass']">
             <xsl:variable name="targetWithPackage" select="@target"/>
-            <xsl:variable name="target">
-                <xsl:call-template name="packaging-selector">
-                    <xsl:with-param name="clazz" select="@target" />
-                </xsl:call-template>
-            </xsl:variable>
             <xsl:variable name="isTargetPresent">
                 <xsl:call-template name="is-target-present">
                     <xsl:with-param name="componentType" select="$componentType"/>
@@ -131,16 +87,8 @@
                 </xsl:call-template>
             </xsl:variable>
 
-            <xsl:variable name="visible">
-                <xsl:call-template name="is-relationship-visible">
-                    <xsl:with-param name="isTargetPresent" select="$isTargetPresent"/>
-                    <xsl:with-param name="sourceWithPackage" select="$classNameWithPackage"/>
-                    <xsl:with-param name="targetWithPackage" select="$targetWithPackage"/>
-                </xsl:call-template>
-            </xsl:variable>
-
-            <xsl:if test="$visible = '1'">
-                <xsl:value-of select="concat($target, ' ', $dottedConnector, ' ', $className)"/>
+            <xsl:if test="f:is-relationship-visible($isTargetPresent, $classNameWithPackage, $targetWithPackage)">
+                <xsl:value-of select="concat(f:class-name(@target), ' ', $dottedConnector, ' ', $className)"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
@@ -155,11 +103,6 @@
 
         <xsl:for-each select="Association[@associationType='aggr']">
             <xsl:variable name="targetWithPackage" select="@target"/>
-            <xsl:variable name="target">
-                <xsl:call-template name="packaging-selector">
-                    <xsl:with-param name="clazz" select="@target" />
-                </xsl:call-template>
-            </xsl:variable>
             <xsl:variable name="isTargetPresent">
                 <xsl:call-template name="is-target-present">
                     <xsl:with-param name="componentType" select="$componentType"/>
@@ -167,17 +110,9 @@
                 </xsl:call-template>
             </xsl:variable>
 
-            <xsl:variable name="visible">
-                <xsl:call-template name="is-relationship-visible">
-                    <xsl:with-param name="isTargetPresent" select="$isTargetPresent"/>
-                    <xsl:with-param name="sourceWithPackage" select="$classNameWithPackage"/>
-                    <xsl:with-param name="targetWithPackage" select="$targetWithPackage"/>
-                </xsl:call-template>
-            </xsl:variable>
-
-            <xsl:if test="$visible = '1'">
+            <xsl:if test="f:is-relationship-visible($isTargetPresent, $classNameWithPackage, $targetWithPackage)">
                 <xsl:value-of
-                    select="concat($className, ' o', $connector, ' &quot;', @minCardinality, '..', @maxCardinality, '&quot; ', $target)"/>
+                    select="concat($className, ' o', $connector, ' &quot;', @minCardinality, '..', @maxCardinality, '&quot; ', f:class-name(@target))"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>

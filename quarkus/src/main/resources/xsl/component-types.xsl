@@ -1,17 +1,13 @@
 <?xml version="1.0"?>
-<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:f="urn:ips2plant:functions">
 
     <!-- Policy or Product component types -->
     <xsl:template match="PolicyCmptType|ProductCmptType2">
         <xsl:variable name="componentType" select="name(.)"/>
         <xsl:if test="$componentType = 'PolicyCmptType' or $showProductComponents">
             <xsl:variable name="classNameWithPackage" select="@className"/>
-
-            <xsl:variable name="className">
-                <xsl:call-template name="packaging-selector">
-                    <xsl:with-param name="clazz" select="@className" />
-                </xsl:call-template>
-            </xsl:variable>
+            <xsl:variable name="className" select="f:class-name(@className)"/>
 
             <xsl:variable name="spot">
                 <xsl:choose>
@@ -35,12 +31,7 @@
             </xsl:variable>
 
             <!-- Class definition -->
-            <xsl:variable name="matchesFilter">
-                <xsl:call-template name="matches-package-filter">
-                    <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:if test="$matchesFilter = 'true'">
+            <xsl:if test="f:matches-package-filter($classNameWithPackage)">
                 <xsl:if test="@abstract='true'">
                     <xsl:text>abstract </xsl:text>
                 </xsl:if>
@@ -81,18 +72,8 @@
             </xsl:call-template>
 
             <!-- Product type relation -->
-            <xsl:variable name="productMatchesFilter">
-                <xsl:call-template name="matches-package-filter">
-                    <xsl:with-param name="classNameWithPackage" select="@productCmptType"/>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:if test="$componentType = 'PolicyCmptType' and @productCmptType and $showProductComponents = 'true' and $productMatchesFilter = 'true'">
-                <xsl:variable name="productPackaging">
-                    <xsl:call-template name="packaging-selector">
-                        <xsl:with-param name="clazz" select="@productCmptType" />
-                    </xsl:call-template>
-                </xsl:variable>
-                <xsl:value-of select="concat($className, ' ', $dottedConnector, '# ', $productPackaging, '&#xa;')"/>
+            <xsl:if test="$componentType = 'PolicyCmptType' and @productCmptType and $showProductComponents = 'true' and f:matches-package-filter(@productCmptType)">
+                <xsl:value-of select="concat($className, ' ', $dottedConnector, '# ', f:class-name(@productCmptType), '&#xa;')"/>
             </xsl:if>
 
             <!-- Compositions, associations, aggregations -->

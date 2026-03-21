@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
-<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:f="urn:ips2plant:functions"
+                exclude-result-prefixes="f">
 
     <!-- Parameters -->
     <xsl:param name="printTargetRole"/>

@@ -1,15 +1,11 @@
 <?xml version="1.0"?>
-<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:f="urn:ips2plant:functions">
 
     <xsl:template match="EnumType">
         <xsl:if test="$showEnumTypes">
             <xsl:variable name="classNameWithPackage" select="@className"/>
-
-            <xsl:variable name="className">
-                <xsl:call-template name="packaging-selector">
-                    <xsl:with-param name="clazz" select="@className" />
-                </xsl:call-template>
-            </xsl:variable>
+            <xsl:variable name="className" select="f:class-name(@className)"/>
 
             <xsl:variable name="classType">
                 <xsl:value-of select="$bb"/>
@@ -28,12 +24,7 @@
             </xsl:variable>
 
             <!-- Class definition -->
-            <xsl:variable name="matchesFilter">
-                <xsl:call-template name="matches-package-filter">
-                    <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
-                </xsl:call-template>
-            </xsl:variable>
-            <xsl:if test="$matchesFilter = 'true'">
+            <xsl:if test="f:matches-package-filter($classNameWithPackage)">
                 <xsl:if test="@abstract='true'">
                     <xsl:text>abstract </xsl:text>
                 </xsl:if>
