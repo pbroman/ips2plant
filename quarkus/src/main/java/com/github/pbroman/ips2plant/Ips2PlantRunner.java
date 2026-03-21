@@ -21,8 +21,11 @@ public class Ips2PlantRunner {
 
     private static final Logger log = LoggerFactory.getLogger(Ips2PlantRunner.class);
 
-    public static final String IPS_TO_PLANT_PATH = "/xsl/ips2plant.xsl";
     public static final String COLLECTION_FILENAME = "collection.xml";
+    private static final String[] XSL_FILES = {
+            "ips2plant.xsl", "helpers.xsl", "relationships.xsl",
+            "component-types.xsl", "enum-types.xsl", "table-structures.xsl"
+    };
 
     private final IpsFileCollector collector;
     private final  XmlAssembler assembler;
@@ -67,20 +70,26 @@ public class Ips2PlantRunner {
             assembler.assemble(ipsFiles, collection);
         }
 
-        // Packed in an uber-jar, the resource will be zipped, so we have to copy it to a temp file
-        var xsltStream = Objects.requireNonNull(Ips2PlantRunner.class.getResourceAsStream(IPS_TO_PLANT_PATH));
-        var tempXsl = File.createTempFile("com/github/pbroman/ips2plant", "xsl");
-        try (var out = new FileOutputStream(tempXsl)) {
-            IOUtils.copy(xsltStream, out);
+        // Packed in an uber-jar, the resources will be zipped, so we have to copy them to a temp directory
+        var tempXslDir = Files.createTempDirectory("ips2plant-xsl");
+        for (var xslFile : XSL_FILES) {
+            var xslStream = Objects.requireNonNull(Ips2PlantRunner.class.getResourceAsStream("/xsl/" + xslFile));
+            var target = tempXslDir.resolve(xslFile).toFile();
+            try (var out = new FileOutputStream(target)) {
+                IOUtils.copy(xslStream, out);
+            }
         }
 
         log.info("Xslt processing...");
-        xsltProcessor.process(tempXsl.toPath(), collection, output, stringParams);
+        xsltProcessor.process(tempXslDir.resolve("ips2plant.xsl"), collection, output, stringParams);
         log.info("Finished processing, result in {}", output.toAbsolutePath());
 
         if (!workdirGiven) {
             Files.delete(collection);
         }
-        tempXsl.delete();
+        for (var xslFile : XSL_FILES) {
+            Files.deleteIfExists(tempXslDir.resolve(xslFile));
+        }
+        Files.delete(tempXslDir);
     }
 }

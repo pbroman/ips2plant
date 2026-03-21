@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+    <!-- Policy or Product component types -->
+    <xsl:template match="PolicyCmptType|ProductCmptType2">
+        <xsl:variable name="componentType" select="name(.)"/>
+        <xsl:if test="$componentType = 'PolicyCmptType' or $showProductComponents">
+            <xsl:variable name="classNameWithPackage" select="@className"/>
+
+            <xsl:variable name="className">
+                <xsl:call-template name="packaging-selector">
+                    <xsl:with-param name="clazz" select="@className" />
+                </xsl:call-template>
+            </xsl:variable>
+
+            <xsl:variable name="spot">
+                <xsl:choose>
+                    <xsl:when test="$componentType = 'ProductCmptType2' and not(@abstract)"><xsl:value-of select="$productSpot"/></xsl:when>
+                    <xsl:when test="$componentType = 'PolicyCmptType' and not(@abstract)"><xsl:value-of select="$policySpot"/></xsl:when>
+                </xsl:choose>
+            </xsl:variable>
+
+            <xsl:variable name="classType">
+                <xsl:choose>
+                    <xsl:when test="$componentType = 'ProductCmptType2'">
+                        <xsl:value-of select="concat($bb, $spot, $productType, $ff)"/>
+                    </xsl:when>
+                    <xsl:when test="$componentType = 'PolicyCmptType'">
+                        <xsl:value-of select="concat($bb, $spot, $policyType, $ff)"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:value-of select="concat($bb, name(.), $ff)"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:variable>
+
+            <!-- Class definition -->
+            <xsl:variable name="matchesFilter">
+                <xsl:call-template name="matches-package-filter">
+                    <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                </xsl:call-template>
+            </xsl:variable>
+            <xsl:if test="$matchesFilter = 'true'">
+                <xsl:if test="@abstract='true'">
+                    <xsl:text>abstract </xsl:text>
+                </xsl:if>
+                <xsl:value-of select="concat('class ', $className, $classType, ' { &#xa;')"/>
+                <xsl:for-each select="Attribute">
+                    <xsl:sort select="@name"/>
+                    <xsl:variable name="attrType">
+                        <xsl:choose>
+                            <xsl:when test="@attributeType='changeable'">+</xsl:when>
+                            <xsl:when test="@attributeType='derived'">~</xsl:when>
+                            <xsl:when test="@attributeType='computed'">#</xsl:when>
+                            <xsl:when test="@attributeType='constant'">-</xsl:when>
+                        </xsl:choose>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('  ', $attrType, @name, ': ', @datatype, '&#xa;')"/>
+                </xsl:for-each>
+                <xsl:text>}&#xa;</xsl:text>
+                <xsl:for-each select="Attribute">
+                    <xsl:call-template name="enum-association">
+                        <xsl:with-param name="enumType" select="@datatype" />
+                        <xsl:with-param name="className" select="$className" />
+                    </xsl:call-template>
+                </xsl:for-each>
+            </xsl:if>
+
+            <!-- Inheritance -->
+            <xsl:variable name="isSupertypePresent">
+                <xsl:call-template name="is-target-present">
+                    <xsl:with-param name="componentType" select="$componentType"/>
+                    <xsl:with-param name="targetClassName" select="@supertype"/>
+                </xsl:call-template>
+            </xsl:variable>
+            <xsl:call-template name="inheritance">
+                <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                <xsl:with-param name="className" select="$className"/>
+                <xsl:with-param name="supertypeAttr" select="@supertype"/>
+                <xsl:with-param name="isSupertypePresent" select="$isSupertypePresent"/>
+            </xsl:call-template>
+
+            <!-- Product type relation -->
+            <xsl:variable name="productMatchesFilter">
+                <xsl:call-template name="matches-package-filter">
+                    <xsl:with-param name="classNameWithPackage" select="@productCmptType"/>
+                </xsl:call-template>
+            </xsl:variable>
+            <xsl:if test="$componentType = 'PolicyCmptType' and @productCmptType and $showProductComponents = 'true' and $productMatchesFilter = 'true'">
+                <xsl:variable name="productPackaging">
+                    <xsl:call-template name="packaging-selector">
+                        <xsl:with-param name="clazz" select="@productCmptType" />
+                    </xsl:call-template>
+                </xsl:variable>
+                <xsl:value-of select="concat($className, ' ', $dottedConnector, '# ', $productPackaging, '&#xa;')"/>
+            </xsl:if>
+
+            <!-- Compositions, associations, aggregations -->
+            <xsl:call-template name="compositions">
+                <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                <xsl:with-param name="className" select="$className"/>
+            </xsl:call-template>
+
+            <xsl:call-template name="associations">
+                <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                <xsl:with-param name="className" select="$className"/>
+                <xsl:with-param name="componentType" select="$componentType"/>
+            </xsl:call-template>
+
+            <xsl:call-template name="aggregations">
+                <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                <xsl:with-param name="className" select="$className"/>
+                <xsl:with-param name="componentType" select="$componentType"/>
+            </xsl:call-template>
+
+            <!-- Table structure usage -->
+            <xsl:for-each select="TableStructureUsage/TableStructure">
+                <xsl:call-template name="table-usage">
+                    <xsl:with-param name="tableStructure" select="@tableStructure" />
+                    <xsl:with-param name="className" select="$className" />
+                </xsl:call-template>
+            </xsl:for-each>
+        </xsl:if>
+    </xsl:template>
+
+</xsl:stylesheet>

@@ -1,6 +1,5 @@
 package com.github.pbroman.ips2plant.core;
 
-import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Map;
@@ -24,8 +23,8 @@ public class XsltProcessor {
             var xmlSource = processor.newDocumentBuilder()
                     .build(new StreamSource(new StringReader(collectionXml)));
 
-            InputStream xslStream = getClass().getResourceAsStream(XSL_RESOURCE);
-            if (xslStream == null) {
+            var xslUrl = getClass().getResource(XSL_RESOURCE);
+            if (xslUrl == null) {
                 throw new IllegalStateException("XSLT resource not found: " + XSL_RESOURCE);
             }
 
@@ -33,7 +32,7 @@ public class XsltProcessor {
             params.forEach((key, value) ->
                     xsltCompiler.setParameter(new QName(key), new XdmAtomicValue(value)));
 
-            var executable = xsltCompiler.compile(new StreamSource(xslStream));
+            var executable = xsltCompiler.compile(new StreamSource(xslUrl.toExternalForm()));
             var xsltTransformer = executable.load();
 
             var writer = new StringWriter();
