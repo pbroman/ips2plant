@@ -1,0 +1,1 @@
+rootProject.name = "ips2plant-intellij-plugin"

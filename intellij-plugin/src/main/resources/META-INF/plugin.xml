@@ -1,0 +1,32 @@
+<idea-plugin>
+    <id>com.github.pbroman.ips2plant</id>
+    <name>IPS to PlantUML</name>
+    <vendor>pbroman</vendor>
+    <description><![CDATA[
+        Generates PlantUML class diagrams from Faktor-IPS model files (.ipspolicycmpttype, .ipsproductcmpttype, .ipsenumtype, .ipstablestructure).
+        <br/>
+        <ul>
+            <li>Right-click on model directories to generate diagrams</li>
+            <li>Tool window with diagram options</li>
+            <li>Opens result directly in the editor</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <toolWindow id="IPS to PlantUML"
+                    factoryClass="com.github.pbroman.ips2plant.ui.Ips2PlantToolWindowFactory"
+                    anchor="right"
+                    icon="AllIcons.FileTypes.Diagram"/>
+    </extensions>
+
+    <actions>
+        <action id="Ips2Plant.GenerateFromDirectory"
+                class="com.github.pbroman.ips2plant.action.GeneratePlantUmlAction"
+                text="Generate PlantUML Diagram"
+                description="Generate a PlantUML class diagram from IPS model files in the selected directory">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>
