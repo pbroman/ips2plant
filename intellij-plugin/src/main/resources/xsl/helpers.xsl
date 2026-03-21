@@ -1,12 +1,32 @@
 <?xml version="1.0"?>
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-    <!-- Checks if a class name matches the package filter -->
+    <!-- Checks if a class name matches the package filter (comma-separated list) -->
     <xsl:template name="matches-package-filter">
         <xsl:param name="classNameWithPackage"/>
+        <xsl:param name="filters" select="$packageFilter"/>
         <xsl:choose>
-            <xsl:when test="$packageFilter = ''">true</xsl:when>
-            <xsl:when test="starts-with($classNameWithPackage, $packageFilter)">true</xsl:when>
+            <xsl:when test="$filters = ''">true</xsl:when>
+            <xsl:when test="contains($filters, ',')">
+                <xsl:variable name="first" select="normalize-space(substring-before($filters, ','))"/>
+                <xsl:variable name="rest" select="substring-after($filters, ',')"/>
+                <xsl:variable name="firstMatch">
+                    <xsl:choose>
+                        <xsl:when test="starts-with($classNameWithPackage, $first)">true</xsl:when>
+                        <xsl:otherwise>false</xsl:otherwise>
+                    </xsl:choose>
+                </xsl:variable>
+                <xsl:choose>
+                    <xsl:when test="$firstMatch = 'true'">true</xsl:when>
+                    <xsl:otherwise>
+                        <xsl:call-template name="matches-package-filter">
+                            <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
+                            <xsl:with-param name="filters" select="$rest"/>
+                        </xsl:call-template>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:when>
+            <xsl:when test="starts-with($classNameWithPackage, normalize-space($filters))">true</xsl:when>
             <xsl:otherwise>false</xsl:otherwise>
         </xsl:choose>
     </xsl:template>
