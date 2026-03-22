@@ -1,19 +1,24 @@
 package com.github.pbroman.ips2plant.ui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -28,12 +33,15 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
 import com.github.pbroman.ips2plant.action.GeneratePlantUmlAction;
 import com.github.pbroman.ips2plant.core.Ips2PlantGenerator;
 import com.github.pbroman.ips2plant.core.Ips2PlantOptions;
+import com.github.pbroman.ips2plant.core.IpsClassSearcher;
 import com.github.pbroman.ips2plant.core.IpsProjectDetector;
 import com.github.pbroman.ips2plant.core.MavenDependencyCollector;
 import com.github.pbroman.ips2plant.core.MavenDependencyCollector.DependencyModel;
@@ -46,6 +54,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.ui.CheckboxTree;
 import com.intellij.ui.CheckboxTreeListener;
 import com.intellij.ui.CheckedTreeNode;
+import com.intellij.ui.CheckBoxList;
 import com.intellij.ui.SimpleTextAttributes;
 import org.jetbrains.annotations.NotNull;
 
@@ -76,7 +85,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
     private static final String TOOLTIP_PACKAGES = "Displays classes in packages";
     private static final String TOOLTIP_PRINT_TARGET_ROLE = "Print the targetRolePlural attribute on the composition arrow";
-    private static final String TOOLTIP_EXTERNAL_SUPERTYPES = "Adds inheritance of super types in dependencies or not in the selected packages";
+    private static final String TOOLTIP_EXTERNAL_SUPERTYPES = "Adds inheritance of supertypes in dependencies or not in the selected packages";
     private static final String TOOLTIP_EXTERNAL_ASSOCIATIONS = "Adds associations to classes not in the selected packages";
     private static final String TOOLTIP_SHOW_TABLES = "Show tables";
     private static final String TOOLTIP_SHOW_TABLE_USAGE = "Show table usage by product component types (including external tables)";
@@ -88,6 +97,15 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_CONNECTOR_LENGTH = "Length of association connectors";
     private static final String TOOLTIP_GENERATE = "Generate PlantUML class diagram from selected IPS model directories";
 
+    private static final String TITLE_SEARCH = "Search";
+    private static final String LABEL_SEARCH = "Search";
+    private static final String LABEL_INCLUDE_DEPENDENCIES = "Include Dependencies";
+    private static final String TOOLTIP_SEARCH_FIELD = "Search for IPS classes by name (* wildcard supported, e.g. *Contract*) - emptying the window clears the search";
+    private static final String TOOLTIP_SEARCH_BUTTON = "Search for IPS classes matching the pattern";
+    private static final String TOOLTIP_INCLUDE_DEPENDENCIES = "Include dependency JARs in search (resolves dependencies if needed)";
+    private static final String TOOLTIP_SEARCH_RESULTS = "Check/uncheck classes to include in the generated PlantUML diagram";
+    private static final String TASK_TITLE_SEARCH = "Searching IPS Classes";
+
     private static final String LABEL_SELECT_ALL_OPTIONS = "Select all";
 
     private final Project project;
@@ -98,6 +116,17 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private boolean propagating;
     // Track temp dirs from dependency extraction for cleanup
     private final List<Path> dependencyTempRoots = new ArrayList<>();
+
+    // Search
+    private final JTextField searchField = withTooltip(new JTextField(15), TOOLTIP_SEARCH_FIELD);
+    private final JCheckBox includeDepsCheck = withTooltip(new JCheckBox(LABEL_INCLUDE_DEPENDENCIES), TOOLTIP_INCLUDE_DEPENDENCIES);
+    private final CheckBoxList<String> searchResultsList = new CheckBoxList<>();
+    private final JLabel noResultsLabel = new JLabel("No IPS classes found");
+    private final CardLayout searchResultsCardLayout = new CardLayout();
+    private final JPanel searchResultsCardPanel = new JPanel(searchResultsCardLayout);
+    private static final String CARD_RESULTS = "results";
+    private static final String CARD_NO_RESULTS = "noResults";
+    private final Map<String, File> searchResults = new LinkedHashMap<>();
 
     // Options
     private final JCheckBox selectAllOptionsCheck = new JCheckBox(LABEL_SELECT_ALL_OPTIONS);
@@ -187,7 +216,47 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         modelSection.setMinimumSize(new Dimension(0, 80));
 
-        // --- Center: Options ---
+        // --- Middle: Search section ---
+        var searchSection = new JPanel(new BorderLayout(0, 2));
+        searchSection.setBorder(BorderFactory.createTitledBorder(TITLE_SEARCH));
+
+        var searchInputPanel = new JPanel(new BorderLayout(4, 0));
+        searchField.addActionListener(e -> runSearch());
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { /* no-op */ }
+            @Override public void changedUpdate(DocumentEvent e) { /* no-op */ }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                if (searchField.getText().isEmpty()) {
+                    clearSearchResults();
+                }
+            }
+        });
+        searchInputPanel.add(searchField, BorderLayout.CENTER);
+        var searchButton = new JButton(LABEL_SEARCH);
+        searchButton.setToolTipText(TOOLTIP_SEARCH_BUTTON);
+        searchButton.addActionListener(e -> runSearch());
+        searchInputPanel.add(searchButton, BorderLayout.EAST);
+        searchSection.add(searchInputPanel, BorderLayout.NORTH);
+
+        searchResultsList.setToolTipText(TOOLTIP_SEARCH_RESULTS);
+        searchResultsList.setCheckBoxListListener((index, value) -> scheduleRegeneration());
+        var searchResultsScroll = new JScrollPane(searchResultsList);
+        searchResultsScroll.setBorder(null);
+        noResultsLabel.setForeground(new Color(200, 0, 0));
+        noResultsLabel.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 4));
+        searchResultsCardPanel.add(searchResultsScroll, CARD_RESULTS);
+        searchResultsCardPanel.add(noResultsLabel, CARD_NO_RESULTS);
+        searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
+        searchSection.add(searchResultsCardPanel, BorderLayout.CENTER);
+
+        var searchBottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        searchBottomPanel.add(includeDepsCheck);
+        searchSection.add(searchBottomPanel, BorderLayout.SOUTH);
+
+        searchSection.setMinimumSize(new Dimension(0, 80));
+
+        // --- Bottom: Options ---
         var optionsPanel = new JPanel(new GridBagLayout());
         optionsPanel.setBorder(BorderFactory.createTitledBorder(TITLE_OPTIONS));
         var gbc = new GridBagConstraints();
@@ -257,12 +326,17 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         // Remove the border from the inner optionsPanel since the section has one
         optionsPanel.setBorder(null);
 
-        // --- Split pane: model dirs (top) + options (bottom) ---
-        var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, modelSection, optionsSection);
-        splitPane.setResizeWeight(0.5);
-        splitPane.setDividerSize(6);
-        splitPane.setContinuousLayout(true);
-        add(splitPane, BorderLayout.CENTER);
+        // --- Split panes: model dirs (top) + search (middle) + options (bottom) ---
+        var bottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchSection, optionsSection);
+        bottomSplit.setResizeWeight(0.5);
+        bottomSplit.setDividerSize(6);
+        bottomSplit.setContinuousLayout(true);
+
+        var topSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, modelSection, bottomSplit);
+        topSplit.setResizeWeight(0.33);
+        topSplit.setDividerSize(6);
+        topSplit.setContinuousLayout(true);
+        add(topSplit, BorderLayout.CENTER);
 
         // --- Bottom: Generate button ---
         var bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -652,23 +726,202 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         updateAncestorsChecked(parentNode);
     }
 
-    private void runGeneration() {
-        var localDirs = getSelectedLocalDirs();
-        var depDirs = getSelectedDependencyDirs();
-        if (localDirs.isEmpty() && depDirs.isEmpty()) return;
-        var options = getOptions();
+    private void runSearch() {
+        var pattern = searchField.getText().trim();
+        if (pattern.isEmpty()) return;
 
-        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
+        LOG.info("runSearch: pattern='" + pattern + "'");
+
+        var selectedLocal = getSelectedLocalDirs();
+        var searchDirs = new ArrayList<>(selectedLocal.isEmpty() ? getAllLocalModelDirs() : selectedLocal);
+
+        boolean includeDeps = includeDepsCheck.isSelected();
+        if (includeDeps) {
+            var depDirs = getAllDependencyDirs();
+            if (depDirs.isEmpty()) {
+                LOG.info("runSearch: dependencies not yet resolved, resolving first");
+                resolveAndThenSearch(pattern, searchDirs);
+                return;
+            }
+            if (selectedLocal.isEmpty()) {
+                searchDirs.addAll(depDirs);
+            } else {
+                searchDirs.addAll(getSelectedDependencyDirs().isEmpty() ? depDirs : getSelectedDependencyDirs());
+            }
+        }
+
+        LOG.info("runSearch: searching in " + searchDirs.size() + " directories");
+        var dirsToSearch = List.copyOf(searchDirs);
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_SEARCH, false) {
             @Override
             public void run(@NotNull ProgressIndicator indicator) {
-                indicator.setText(TASK_STATUS_COLLECTING);
-                var generator = new Ips2PlantGenerator();
-                var pumlContent = generator.generate(localDirs, depDirs, options, indicator::setText);
-
-                ApplicationManager.getApplication().invokeLater(() ->
-                        GeneratePlantUmlAction.openInEditor(project, pumlContent));
+                indicator.setText("Searching for IPS classes...");
+                var searcher = new IpsClassSearcher();
+                var results = searcher.search(pattern, dirsToSearch);
+                LOG.info("runSearch: found " + results.size() + " matching classes");
+                ApplicationManager.getApplication().invokeLater(() -> updateSearchResults(results));
             }
         });
+    }
+
+    private void resolveAndThenSearch(String pattern, List<Path> localSearchDirs) {
+        var basePath = project.getBasePath();
+        if (basePath == null) return;
+
+        var modelDirs = getSelectedDirs();
+        if (modelDirs.isEmpty()) {
+            modelDirs = getAllModelDirs();
+        }
+
+        var pomDirs = new LinkedHashSet<Path>();
+        for (var modelDir : modelDirs) {
+            var pomDir = findPomDir(modelDir);
+            if (pomDir != null) pomDirs.add(pomDir);
+        }
+        if (pomDirs.isEmpty()) return;
+
+        var projectArtifactIds = collectProjectArtifactIds(Path.of(basePath));
+
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_RESOLVE, false) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                indicator.setText("Resolving Maven classpath...");
+                var collector = new MavenDependencyCollector();
+                var depModels = new ArrayList<DependencyModel>();
+
+                for (var pomDir : pomDirs) {
+                    try {
+                        depModels.addAll(collector.collectFromDependencies(pomDir, projectArtifactIds));
+                    } catch (IOException | InterruptedException e) {
+                        LOG.error("resolveAndThenSearch: failed to resolve dependencies from " + pomDir, e);
+                    }
+                }
+
+                ApplicationManager.getApplication().invokeLater(() -> {
+                    addDependenciesToTree(depModels);
+
+                    // Now run the search with the newly resolved dependency dirs
+                    var searchDirs = new ArrayList<>(localSearchDirs);
+                    searchDirs.addAll(getAllDependencyDirs());
+                    var dirsToSearch = List.copyOf(searchDirs);
+
+                    ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_SEARCH, false) {
+                        @Override
+                        public void run(@NotNull ProgressIndicator indicator2) {
+                            indicator2.setText("Searching for IPS classes...");
+                            var searcher = new IpsClassSearcher();
+                            var results = searcher.search(pattern, dirsToSearch);
+                            ApplicationManager.getApplication().invokeLater(() -> updateSearchResults(results));
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    private void updateSearchResults(Map<String, File> results) {
+        searchResults.clear();
+        searchResults.putAll(results);
+        searchResultsList.clear();
+        if (results.isEmpty()) {
+            LOG.info("Search returned no results");
+            searchResultsCardLayout.show(searchResultsCardPanel, CARD_NO_RESULTS);
+        } else {
+            LOG.info("Search returned " + results.size() + " results");
+            for (var className : results.keySet()) {
+                searchResultsList.addItem(className, className, true);
+            }
+            searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
+            // Auto-generate PlantUML for the found classes
+            runGeneration();
+        }
+    }
+
+    private void clearSearchResults() {
+        searchResults.clear();
+        searchResultsList.clear();
+        searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
+    }
+
+    private List<Path> getAllLocalModelDirs() {
+        var result = new ArrayList<Path>();
+        Enumeration<?> children = treeRoot.children();
+        while (children.hasMoreElements()) {
+            if (children.nextElement() instanceof CheckedTreeNode child
+                    && !LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                collectAllModelDirs(child, result);
+            }
+        }
+        return result;
+    }
+
+    private List<Path> getAllDependencyDirs() {
+        var result = new ArrayList<Path>();
+        Enumeration<?> children = treeRoot.children();
+        while (children.hasMoreElements()) {
+            if (children.nextElement() instanceof CheckedTreeNode child
+                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                collectAllModelDirs(child, result);
+            }
+        }
+        return result;
+    }
+
+    private Map<String, File> getSelectedSearchResults() {
+        var selected = new LinkedHashMap<String, File>();
+        int count = searchResultsList.getModel().getSize();
+        for (int i = 0; i < count; i++) {
+            var className = searchResultsList.getItemAt(i);
+            if (className != null && searchResultsList.isItemSelected(className)) {
+                var file = searchResults.get(className);
+                if (file != null) {
+                    selected.put(className, file);
+                }
+            }
+        }
+        return selected;
+    }
+
+    private void runGeneration() {
+        var selectedSearchFiles = getSelectedSearchResults();
+        var options = getOptions();
+
+        if (!selectedSearchFiles.isEmpty()) {
+            LOG.info("runGeneration: generating from " + selectedSearchFiles.size() + " search results");
+            // Generate from search results
+            ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    indicator.setText(TASK_STATUS_COLLECTING);
+                    var generator = new Ips2PlantGenerator();
+                    var pumlContent = generator.generate(selectedSearchFiles, options, indicator::setText);
+
+                    ApplicationManager.getApplication().invokeLater(() ->
+                            GeneratePlantUmlAction.openInEditor(project, pumlContent));
+                }
+            });
+        } else {
+            // Generate from selected model directories
+            var localDirs = getSelectedLocalDirs();
+            var depDirs = getSelectedDependencyDirs();
+            if (localDirs.isEmpty() && depDirs.isEmpty()) {
+                LOG.info("runGeneration: no directories selected, skipping");
+                return;
+            }
+
+            LOG.info("runGeneration: generating from " + localDirs.size() + " local dirs + " + depDirs.size() + " dependency dirs");
+            ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
+                @Override
+                public void run(@NotNull ProgressIndicator indicator) {
+                    indicator.setText(TASK_STATUS_COLLECTING);
+                    var generator = new Ips2PlantGenerator();
+                    var pumlContent = generator.generate(localDirs, depDirs, options, indicator::setText);
+
+                    ApplicationManager.getApplication().invokeLater(() ->
+                            GeneratePlantUmlAction.openInEditor(project, pumlContent));
+                }
+            });
+        }
     }
 
     public Ips2PlantOptions getOptions() {

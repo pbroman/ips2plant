@@ -22,6 +22,16 @@ public class Ips2PlantGenerator {
         return generate(modelDirPaths, List.of(), options, statusCallback);
     }
 
+    public String generate(Map<String, File> ipsFiles, Ips2PlantOptions options, Consumer<String> statusCallback) {
+        if (ipsFiles.isEmpty()) {
+            return "@startuml\nnote \"No IPS model files found\" as N1\n@enduml";
+        }
+
+        var collectionXml = assembler.assemble(ipsFiles);
+        statusCallback.accept("Transforming to PlantUML...");
+        return xsltProcessor.transform(collectionXml, options.toXsltParams());
+    }
+
     public String generate(List<Path> localDirs, List<Path> dependencyDirs, Ips2PlantOptions options, Consumer<String> statusCallback) {
         statusCallback.accept("Collecting IPS files...");
         var ipsFiles = collector.collect(localDirs);
@@ -49,13 +59,7 @@ public class Ips2PlantGenerator {
             }
         }
 
-        if (ipsFiles.isEmpty()) {
-            return "@startuml\nnote \"No IPS model files found\" as N1\n@enduml";
-        }
-
-        var collectionXml = assembler.assemble(ipsFiles);
-        statusCallback.accept("Transforming to PlantUML...");
-        return xsltProcessor.transform(collectionXml, options.toXsltParams());
+        return generate(ipsFiles, options, statusCallback);
     }
 
     private Map<String, File> filterByReferencedTypes(Map<String, File> depFiles, Set<String> referencedTypes) {

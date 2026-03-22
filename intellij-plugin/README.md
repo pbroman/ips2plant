@@ -56,6 +56,21 @@ The plugin can include IPS model files from Maven dependency JARs in the diagram
 
 Only external `de.faktorzehn` group dependencies are resolved — JARs belonging to modules within the current project are automatically excluded. The plugin locates Maven via `MAVEN_HOME`, `M2_HOME`, `PATH`, or common installation directories.
 
+### Search
+
+The search panel lets you find specific IPS classes by name and generate a diagram for just those classes.
+
+1. Enter a class name pattern in the **Search** field (supports `*` wildcard, e.g. `*Contract*`, `Policy*`, `*Type`)
+2. Press **Enter** or click **Search**
+3. Matching classes appear as a checkbox list — all are selected by default
+4. A PlantUML diagram is generated automatically for the checked results
+5. Uncheck classes to exclude them and the diagram regenerates accordingly
+6. Clear the search field to dismiss the search results and return to directory-based generation
+
+The search is case-insensitive and matches against the simple class name (not the fully qualified name).
+
+**Include Dependencies**: Check this option to also search in dependency JARs. If dependencies have not been resolved yet, the plugin will resolve them automatically before searching.
+
 ### Diagram Options
 
 | Option                  | Description                                                                     |
@@ -82,6 +97,10 @@ Attribute visibility markers represent Faktor-IPS attribute types:
 | `~`    | derived        |
 | `#`    | computed       |
 | `-`    | constant       |
+
+As shown in generated plantUml:
+
+![Attribute type legend](../docu/attr_type_legend.png)
 
 ## Tips
 
