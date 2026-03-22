@@ -19,7 +19,21 @@ import org.xml.sax.SAXException;
 
 public class IpsFileCollector {
 
-    private static final String IPS_FILE_REGEX = ".+\\.ips.+";
+    static final List<String> SUPPORTED_EXTENSIONS = List.of(
+            ".ipspolicycmpttype",
+            ".ipsproductcmpttype",
+            ".ipsenumtype",
+            ".ipstablestructure"
+    );
+
+    static boolean isSupportedIpsFile(String fileName) {
+        for (var ext : SUPPORTED_EXTENSIONS) {
+            if (fileName.endsWith(ext)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public Map<String, File> collect(List<Path> dirPaths) {
         var result = new HashMap<String, File>();
@@ -67,7 +81,7 @@ public class IpsFileCollector {
     }
 
     private void recursiveCollect(File file, File root, Map<String, File> map) {
-        if (file.isFile() && file.getName().matches(IPS_FILE_REGEX)) {
+        if (file.isFile() && isSupportedIpsFile(file.getName())) {
             var relativePath = root.toPath().relativize(file.toPath()).toString();
             var className = relativePath
                     .substring(0, relativePath.lastIndexOf('.'))

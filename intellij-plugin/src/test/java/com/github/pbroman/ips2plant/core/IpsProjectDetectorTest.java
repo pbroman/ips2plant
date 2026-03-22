@@ -33,6 +33,7 @@ class IpsProjectDetectorTest {
         // given
         var modelDir = tempDir.resolve("model");
         Files.createDirectories(modelDir);
+        Files.writeString(modelDir.resolve("Policy.ipspolicycmpttype"), "<PolicyCmptType/>");
         writeIpsProject(tempDir, """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <IpsProject>
@@ -56,6 +57,8 @@ class IpsProjectDetectorTest {
         var model2 = tempDir.resolve("productmodel");
         Files.createDirectories(model1);
         Files.createDirectories(model2);
+        Files.writeString(model1.resolve("Policy.ipspolicycmpttype"), "<PolicyCmptType/>");
+        Files.writeString(model2.resolve("Product.ipsproductcmpttype"), "<ProductCmptType2/>");
         writeIpsProject(tempDir, """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <IpsProject>
@@ -117,6 +120,7 @@ class IpsProjectDetectorTest {
         var subProject = tempDir.resolve("sub/project");
         var modelDir = subProject.resolve("model");
         Files.createDirectories(modelDir);
+        Files.writeString(modelDir.resolve("Contract.ipspolicycmpttype"), "<PolicyCmptType/>");
         writeIpsProject(subProject, """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <IpsProject>
@@ -131,6 +135,29 @@ class IpsProjectDetectorTest {
 
         // then
         assertThat(dirs).containsExactly(modelDir);
+    }
+
+    @Test
+    void detectModelDirs_modelDirWithOnlyUnsupportedIpsTypes_isSkipped() throws IOException {
+        // given — model dir exists but only has unsupported IPS file types
+        var modelDir = tempDir.resolve("model");
+        Files.createDirectories(modelDir);
+        Files.writeString(modelDir.resolve("Something.ipssrcfile"), "<IpsSrcFile/>");
+        Files.writeString(modelDir.resolve("Product.ipsproductcmpt"), "<ProductCmpt/>");
+        writeIpsProject(tempDir, """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <IpsProject>
+                    <IpsObjectPath>
+                        <Entry type="src" sourceFolder="model"/>
+                    </IpsObjectPath>
+                </IpsProject>
+                """);
+
+        // when
+        var dirs = detector.detectModelDirs(tempDir);
+
+        // then
+        assertThat(dirs).isEmpty();
     }
 
     @Test

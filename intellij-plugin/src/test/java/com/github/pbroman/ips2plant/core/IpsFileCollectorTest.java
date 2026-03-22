@@ -90,6 +90,22 @@ class IpsFileCollectorTest {
     }
 
     @Test
+    void collect_unsupportedIpsFileTypes_areIgnored() throws IOException {
+        // given — IPS file types not in the supported list
+        Files.writeString(tempDir.resolve("Something.ipssrcfile"), "<IpsSrcFile/>");
+        Files.writeString(tempDir.resolve("Test.ipstest"), "<Test/>");
+        Files.writeString(tempDir.resolve("Product.ipsproductcmpt"), "<ProductCmpt/>");
+        // supported file should still be collected
+        Files.writeString(tempDir.resolve("Policy.ipspolicycmpttype"), "<PolicyCmptType/>");
+
+        // when
+        var result = collector.collect(List.of(tempDir));
+
+        // then
+        assertThat(result).hasSize(1).containsKey("Policy");
+    }
+
+    @Test
     void collect_multipleDirectories_mergesResults() throws IOException {
         // given
         var dir1 = tempDir.resolve("dir1");

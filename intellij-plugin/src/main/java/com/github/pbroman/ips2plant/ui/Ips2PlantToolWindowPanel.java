@@ -100,9 +100,13 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TITLE_SEARCH = "Search";
     private static final String LABEL_SEARCH = "Search";
     private static final String LABEL_INCLUDE_DEPENDENCIES = "Include Dependencies";
+    private static final String LABEL_ADD_SUPERTYPES = "Add Supertypes";
+    private static final String LABEL_ADD_REFERENCING = "Add Referencing Classes";
     private static final String TOOLTIP_SEARCH_FIELD = "Search for IPS classes by name (* wildcard supported, e.g. *Contract*) - emptying the window clears the search";
     private static final String TOOLTIP_SEARCH_BUTTON = "Search for IPS classes matching the pattern";
     private static final String TOOLTIP_INCLUDE_DEPENDENCIES = "Include dependency JARs in search (resolves dependencies if needed)";
+    private static final String TOOLTIP_ADD_SUPERTYPES = "Transitively add all supertypes (parents, grandparents, etc.) of found classes to the diagram";
+    private static final String TOOLTIP_ADD_REFERENCING = "Add all classes that reference found classes through associations";
     private static final String TOOLTIP_SEARCH_RESULTS = "Check/uncheck classes to include in the generated PlantUML diagram";
     private static final String TASK_TITLE_SEARCH = "Searching IPS Classes";
 
@@ -120,6 +124,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     // Search
     private final JTextField searchField = withTooltip(new JTextField(15), TOOLTIP_SEARCH_FIELD);
     private final JCheckBox includeDepsCheck = withTooltip(new JCheckBox(LABEL_INCLUDE_DEPENDENCIES), TOOLTIP_INCLUDE_DEPENDENCIES);
+    private final JCheckBox addSupertypesCheck = withTooltip(new JCheckBox(LABEL_ADD_SUPERTYPES), TOOLTIP_ADD_SUPERTYPES);
+    private final JCheckBox addReferencingCheck = withTooltip(new JCheckBox(LABEL_ADD_REFERENCING), TOOLTIP_ADD_REFERENCING);
     private final CheckBoxList<String> searchResultsList = new CheckBoxList<>();
     private final JLabel noResultsLabel = new JLabel("No IPS classes found");
     private final CardLayout searchResultsCardLayout = new CardLayout();
@@ -250,8 +256,19 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
         searchSection.add(searchResultsCardPanel, BorderLayout.CENTER);
 
-        var searchBottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        searchBottomPanel.add(includeDepsCheck);
+        var searchBottomPanel = new JPanel(new GridBagLayout());
+        var sgbc = new GridBagConstraints();
+        sgbc.anchor = GridBagConstraints.WEST;
+        sgbc.insets = new Insets(2, 4, 2, 4);
+        sgbc.fill = GridBagConstraints.HORIZONTAL;
+        sgbc.gridy = 0;
+        sgbc.gridx = 0; sgbc.weightx = 0.5;
+        searchBottomPanel.add(addSupertypesCheck, sgbc);
+        sgbc.gridx = 1; sgbc.weightx = 0.5;
+        searchBottomPanel.add(addReferencingCheck, sgbc);
+        sgbc.gridy = 1;
+        sgbc.gridx = 0; sgbc.weightx = 0.5;
+        searchBottomPanel.add(includeDepsCheck, sgbc);
         searchSection.add(searchBottomPanel, BorderLayout.SOUTH);
 
         searchSection.setMinimumSize(new Dimension(0, 80));
@@ -358,16 +375,31 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         }
         selectAllOptionsCheck.addActionListener(e -> scheduleRegenerate.run());
 
-        // Package filter: regenerate on Enter or focus lost
+        // Package filter: regenerate on Enter, focus lost, or when emptied
         packageFilterField.addActionListener(e -> scheduleRegeneration());
         packageFilterField.addFocusListener(new FocusAdapter() {
             @Override
             public void focusLost(FocusEvent e) { scheduleRegeneration(); }
         });
+        packageFilterField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override 
+            public void insertUpdate(DocumentEvent e) { /* no-op */ }
+            @Override 
+            public void changedUpdate(DocumentEvent e) { /* no-op */ }
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                if (packageFilterField.getText().isEmpty()) {
+                    scheduleRegeneration();
+                }
+            }
+        });
 
         // Connector length spinner: regenerate on value change
         connectorLengthSpinner.addChangeListener(e -> scheduleRegeneration());
 
+        // Search expansion checkboxes: regenerate on change
+        addSupertypesCheck.addActionListener(e -> scheduleRegeneration());
+        addReferencingCheck.addActionListener(e -> scheduleRegeneration());
     }
 
     private void scheduleRegeneration() {
@@ -626,7 +658,10 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         }
         // Merge single-child intermediate (non-leaf) nodes with their parent
         // Only merge if both parent and child are folder nodes (String user objects)
-        while (node.getChildCount() == 1
+        // Never merge into the tree root — direct children of root must remain folder nodes
+        // so that getSelectedLocalDirs/getSelectedDependencyDirs can iterate them correctly
+        while (node != treeRoot
+                && node.getChildCount() == 1
                 && node.getChildAt(0) instanceof CheckedTreeNode onlyChild
                 && onlyChild.getUserObject() instanceof String childName
                 && node.getUserObject() instanceof String parentName) {
@@ -888,13 +923,28 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         if (!selectedSearchFiles.isEmpty()) {
             LOG.info("runGeneration: generating from " + selectedSearchFiles.size() + " search results");
+            boolean expandSupertypes = addSupertypesCheck.isSelected();
+            boolean expandReferencing = addReferencingCheck.isSelected();
+            var allDirs = new ArrayList<>(getAllLocalModelDirs());
+            allDirs.addAll(getAllDependencyDirs());
             // Generate from search results
             ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
                     indicator.setText(TASK_STATUS_COLLECTING);
+                    var ipsFiles = new LinkedHashMap<>(selectedSearchFiles);
+                    if (expandSupertypes) {
+                        indicator.setText("Adding supertypes...");
+                        var searcher = new IpsClassSearcher();
+                        ipsFiles = new LinkedHashMap<>(searcher.addSupertypes(ipsFiles, allDirs));
+                    }
+                    if (expandReferencing) {
+                        indicator.setText("Adding referencing classes...");
+                        var searcher = new IpsClassSearcher();
+                        ipsFiles = new LinkedHashMap<>(searcher.addReferencingClasses(ipsFiles, allDirs));
+                    }
                     var generator = new Ips2PlantGenerator();
-                    var pumlContent = generator.generate(selectedSearchFiles, options, indicator::setText);
+                    var pumlContent = generator.generate(ipsFiles, options, indicator::setText);
 
                     ApplicationManager.getApplication().invokeLater(() ->
                             GeneratePlantUmlAction.openInEditor(project, pumlContent));

@@ -23,6 +23,7 @@ class MavenDependencyCollectorTest {
 
     @Test
     void parseClasspath_empty_returnsEmptyList() {
+        // given / when / then
         assertThat(collector.parseClasspath("")).isEmpty();
         assertThat(collector.parseClasspath(null)).isEmpty();
         assertThat(collector.parseClasspath("   ")).isEmpty();
@@ -30,36 +31,54 @@ class MavenDependencyCollectorTest {
 
     @Test
     void parseClasspath_singleJar_returnsList() throws IOException {
+        // given
         var jar = createDummyJar("test.jar");
+
+        // when
         var result = collector.parseClasspath(jar.toString());
+
+        // then
         assertThat(result).containsExactly(jar.toString());
     }
 
     @Test
     void parseClasspath_multipleJars_returnsList() throws IOException {
+        // given
         var jar1 = createDummyJar("a.jar");
         var jar2 = createDummyJar("b.jar");
         var classpath = jar1 + java.io.File.pathSeparator + jar2;
+
+        // when
         var result = collector.parseClasspath(classpath);
+
+        // then
         assertThat(result).containsExactly(jar1.toString(), jar2.toString());
     }
 
     @Test
     void parseClasspath_nonExistentJar_isSkipped() {
-        var result = collector.parseClasspath("/nonexistent/path/foo.jar");
+        // given
+        var classpath = "/nonexistent/path/foo.jar";
+
+        // when
+        var result = collector.parseClasspath(classpath);
+
+        // then
         assertThat(result).isEmpty();
     }
 
     @Test
     void extractIpsFilesFromJar_jarWithIpsFiles_extractsThem() throws IOException {
+        // given
         var jarPath = createJarWithIpsFiles();
 
+        // when
         var result = collector.extractIpsFilesFromJar(jarPath.toString());
 
+        // then
         assertThat(result).isNotNull();
         assertThat(result.toString()).endsWith("model");
 
-        // Check extracted files
         var contractFile = result.resolve("contract/Contract.ipspolicycmpttype");
         assertThat(contractFile).exists();
         assertThat(Files.readString(contractFile)).contains("PolicyCmptType");
@@ -70,27 +89,88 @@ class MavenDependencyCollectorTest {
 
     @Test
     void extractIpsFilesFromJar_jarWithoutIpsFiles_returnsNull() throws IOException {
+        // given
         var jarPath = createJarWithoutIpsFiles();
+
+        // when
         var result = collector.extractIpsFilesFromJar(jarPath.toString());
+
+        // then
         assertThat(result).isNull();
     }
 
     @Test
     void extractIpsFilesFromJar_nonExistentJar_returnsNull() throws IOException {
-        var result = collector.extractIpsFilesFromJar("/nonexistent/file.jar");
+        // given
+        var jarPath = "/nonexistent/file.jar";
+
+        // when
+        var result = collector.extractIpsFilesFromJar(jarPath);
+
+        // then
         assertThat(result).isNull();
     }
 
     @Test
     void extractIpsFilesFromJar_ignoresNonModelIpsFiles() throws IOException {
+        // given: IPS file NOT under model/ prefix
         var jarPath = tempDir.resolve("non-model.jar");
         try (var jos = new JarOutputStream(new FileOutputStream(jarPath.toFile()))) {
-            // IPS file NOT under model/ prefix
             addJarEntry(jos, "src/main/resources/Something.ipsenumtype", "<EnumType/>");
         }
 
+        // when
         var result = collector.extractIpsFilesFromJar(jarPath.toString());
+
+        // then
         assertThat(result).isNull();
+    }
+
+    @Test
+    void extractIpsFilesFromJar_ignoresUnsupportedIpsTypes() throws IOException {
+        // given: JAR with unsupported IPS file types under model/
+        var jarPath = tempDir.resolve("unsupported-ips.jar");
+        try (var jos = new JarOutputStream(new FileOutputStream(jarPath.toFile()))) {
+            addJarEntry(jos, "model/something/Src.ipssrcfile", "<IpsSrcFile/>");
+            addJarEntry(jos, "model/something/Test.ipstest", "<Test/>");
+            addJarEntry(jos, "model/something/Prod.ipsproductcmpt", "<ProductCmpt/>");
+        }
+
+        // when
+        var result = collector.extractIpsFilesFromJar(jarPath.toString());
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    void extractIpsFilesFromJar_extractsOnlySupportedTypes() throws IOException {
+        // given: JAR with both supported and unsupported IPS file types
+        var jarPath = tempDir.resolve("mixed-ips.jar");
+        try (var jos = new JarOutputStream(new FileOutputStream(jarPath.toFile()))) {
+            addJarEntry(jos, "model/contract/Contract.ipspolicycmpttype", "<PolicyCmptType/>");
+            addJarEntry(jos, "model/contract/Src.ipssrcfile", "<IpsSrcFile/>");
+        }
+
+        // when
+        var result = collector.extractIpsFilesFromJar(jarPath.toString());
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.resolve("contract/Contract.ipspolicycmpttype")).exists();
+        assertThat(result.resolve("contract/Src.ipssrcfile")).doesNotExist();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "/repo/com/example/my-artifact-1.2.3.jar, my-artifact",
+            "/repo/org/foo/bar-baz-2.0.0-SNAPSHOT.jar, bar-baz",
+            "/repo/some-lib-0.1.jar, some-lib",
+            "plain.jar, plain"
+    })
+    void extractArtifactId_variousFormats(String jarPath, String expectedArtifactId) {
+        // given / when / then
+        assertThat(MavenDependencyCollector.extractArtifactId(jarPath)).isEqualTo(expectedArtifactId);
     }
 
     private Path createJarWithIpsFiles() throws IOException {
@@ -113,17 +193,6 @@ class MavenDependencyCollectorTest {
             addJarEntry(jos, "META-INF/MANIFEST.MF", "Manifest-Version: 1.0\n");
         }
         return jarPath;
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "/repo/com/example/my-artifact-1.2.3.jar, my-artifact",
-            "/repo/org/foo/bar-baz-2.0.0-SNAPSHOT.jar, bar-baz",
-            "/repo/some-lib-0.1.jar, some-lib",
-            "plain.jar, plain"
-    })
-    void extractArtifactId_variousFormats(String jarPath, String expectedArtifactId) {
-        assertThat(MavenDependencyCollector.extractArtifactId(jarPath)).isEqualTo(expectedArtifactId);
     }
 
     private Path createDummyJar(String name) throws IOException {

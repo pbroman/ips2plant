@@ -184,7 +184,7 @@
                 <xsl:if test="($isAssociationTargetPresent != '' or $addAssociations = 'true')
                                     and ((starts-with($classNameWithPackage, $packageFilter) or starts-with($target, $packageFilter)) and $addAssociations = 'true'
                                                          or (starts-with($classNameWithPackage, $packageFilter) and starts-with($target, $packageFilter)))">
-                    <xsl:value-of select="concat($target, ' ', $dottedConnector, ' ', $className)"/>
+                    <xsl:value-of select="concat($target, ' &lt;', $connector, ' ', $className)"/>
                     <xsl:if test="@targetRoleSingular and $printTargetRole = 'true'">
                         <xsl:value-of select="concat(' : ', @targetRoleSingular)"/>
                     </xsl:if>

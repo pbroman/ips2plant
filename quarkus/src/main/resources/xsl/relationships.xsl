@@ -88,7 +88,7 @@
             </xsl:variable>
 
             <xsl:if test="f:is-relationship-visible($isTargetPresent, $classNameWithPackage, $targetWithPackage)">
-                <xsl:value-of select="concat(f:class-name(@target), ' ', $dottedConnector, ' ', $className)"/>
+                <xsl:value-of select="concat(f:class-name(@target), ' &lt;', $connector, ' ', $className)"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>

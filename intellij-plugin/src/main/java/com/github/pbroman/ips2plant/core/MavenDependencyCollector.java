@@ -31,7 +31,6 @@ public class MavenDependencyCollector {
 
     private static final Logger LOG = Logger.getInstance(MavenDependencyCollector.class);
 
-    private static final String IPS_FILE_REGEX = ".*\\.ips.+";
     private static final String MODEL_PREFIX = "model/";
     private static final Pattern JAR_ARTIFACT_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9._-]*)-\\d.*\\.jar$");
 
@@ -266,7 +265,7 @@ public class MavenDependencyCollector {
                 var name = entry.getName();
                 if (!entry.isDirectory()
                         && name.startsWith(MODEL_PREFIX)
-                        && name.matches(IPS_FILE_REGEX)) {
+                        && IpsFileCollector.isSupportedIpsFile(name)) {
                     ipsEntries.add(entry);
                 }
             }

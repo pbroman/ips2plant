@@ -44,7 +44,7 @@ public class IpsProjectDetector {
             Files.walkFileTree(dir, new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                    if (file.getFileName().toString().matches(".+\\.ips.+")) {
+                    if (IpsFileCollector.isSupportedIpsFile(file.getFileName().toString())) {
                         found[0] = true;
                         return FileVisitResult.TERMINATE;
                     }
