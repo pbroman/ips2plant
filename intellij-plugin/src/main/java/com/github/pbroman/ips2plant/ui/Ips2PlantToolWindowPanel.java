@@ -6,10 +6,15 @@ import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -23,14 +28,17 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.Timer;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 
 import com.github.pbroman.ips2plant.action.GeneratePlantUmlAction;
 import com.github.pbroman.ips2plant.core.Ips2PlantGenerator;
 import com.github.pbroman.ips2plant.core.Ips2PlantOptions;
 import com.github.pbroman.ips2plant.core.IpsProjectDetector;
+import com.github.pbroman.ips2plant.core.MavenDependencyCollector;
+import com.github.pbroman.ips2plant.core.MavenDependencyCollector.DependencyModel;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -43,6 +51,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class Ips2PlantToolWindowPanel extends JPanel {
 
+    private static final Logger LOG = Logger.getInstance(Ips2PlantToolWindowPanel.class);
+
     private static final String TITLE_MODEL_DIRECTORIES = "Model Directories";
     private static final String TITLE_OPTIONS = "Options";
     private static final String LABEL_PACKAGES = "Packages";
@@ -54,22 +64,26 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String LABEL_SHOW_ENUM_TYPES = "Show enum types";
     private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Show enum associations";
     private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Show product components";
+    private static final String LABEL_RESOLVE_DEPENDENCIES = "Resolve Dependencies";
     private static final String LABEL_PACKAGE_FILTER = "Package filter:";
     private static final String LABEL_CONNECTOR_LENGTH = "Connector length:";
     private static final String LABEL_GENERATE = "Generate PlantUML";
     private static final String LABEL_NO_IPS_PROJECTS = "No .ipsproject files found.";
+    private static final String LABEL_DEPENDENCIES = "dependencies";
     private static final String TASK_TITLE = "Generating PlantUML from IPS Models";
+    private static final String TASK_TITLE_RESOLVE = "Resolving Maven Dependencies";
     private static final String TASK_STATUS_COLLECTING = "Collecting IPS files...";
 
     private static final String TOOLTIP_PACKAGES = "Displays classes in packages";
     private static final String TOOLTIP_PRINT_TARGET_ROLE = "Print the targetRolePlural attribute on the composition arrow";
-    private static final String TOOLTIP_EXTERNAL_SUPERTYPES = "Adds inheritance of super types that are NOT present under the scanned models";
-    private static final String TOOLTIP_EXTERNAL_ASSOCIATIONS = "Adds associations to classes that are NOT present under the scanned models";
+    private static final String TOOLTIP_EXTERNAL_SUPERTYPES = "Adds inheritance of super types in dependencies or not in the selected packages";
+    private static final String TOOLTIP_EXTERNAL_ASSOCIATIONS = "Adds associations to classes not in the selected packages";
     private static final String TOOLTIP_SHOW_TABLES = "Show tables";
     private static final String TOOLTIP_SHOW_TABLE_USAGE = "Show table usage by product component types (including external tables)";
     private static final String TOOLTIP_SHOW_ENUM_TYPES = "Show enum types";
     private static final String TOOLTIP_SHOW_ENUM_ASSOCIATIONS = "Show enum associations (including external enums)";
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
+    private static final String TOOLTIP_RESOLVE_DEPENDENCIES = "Resolve Maven dependencies of selected modules and show IPS model files from dependency JARs";
     private static final String TOOLTIP_PACKAGE_FILTER = "Filter the diagram to a package and its associations";
     private static final String TOOLTIP_CONNECTOR_LENGTH = "Length of association connectors";
     private static final String TOOLTIP_GENERATE = "Generate PlantUML class diagram from selected IPS model directories";
@@ -82,6 +96,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private CheckboxTree modelDirTree;
     private CheckedTreeNode treeRoot;
     private boolean propagating;
+    // Track temp dirs from dependency extraction for cleanup
+    private final List<Path> dependencyTempRoots = new ArrayList<>();
+
     // Options
     private final JCheckBox selectAllOptionsCheck = new JCheckBox(LABEL_SELECT_ALL_OPTIONS);
     private final JCheckBox packagesCheck = withTooltip(new JCheckBox(LABEL_PACKAGES), TOOLTIP_PACKAGES);
@@ -159,6 +176,15 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         var treeScrollPane = new JScrollPane(modelDirTree);
         treeScrollPane.setBorder(null);
         modelSection.add(treeScrollPane, BorderLayout.CENTER);
+
+        // Resolve dependencies button below the tree
+        var resolveButton = new JButton(LABEL_RESOLVE_DEPENDENCIES);
+        resolveButton.setToolTipText(TOOLTIP_RESOLVE_DEPENDENCIES);
+        resolveButton.addActionListener(e -> resolveDependencies());
+        var resolvePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        resolvePanel.add(resolveButton);
+        modelSection.add(resolvePanel, BorderLayout.SOUTH);
+
         modelSection.setMinimumSize(new Dimension(0, 80));
 
         // --- Center: Options ---
@@ -258,14 +284,11 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         }
         selectAllOptionsCheck.addActionListener(e -> scheduleRegenerate.run());
 
-        // Package filter: debounce on text changes
-        packageFilterField.getDocument().addDocumentListener(new DocumentListener() {
+        // Package filter: regenerate on Enter or focus lost
+        packageFilterField.addActionListener(e -> scheduleRegeneration());
+        packageFilterField.addFocusListener(new FocusAdapter() {
             @Override
-            public void insertUpdate(DocumentEvent e) { scheduleRegeneration(); }
-            @Override
-            public void removeUpdate(DocumentEvent e) { scheduleRegeneration(); }
-            @Override
-            public void changedUpdate(DocumentEvent e) { scheduleRegeneration(); }
+            public void focusLost(FocusEvent e) { scheduleRegeneration(); }
         });
 
         // Connector length spinner: regenerate on value change
@@ -307,10 +330,180 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         compactTree(treeRoot);
 
+        reloadTree();
+    }
+
+    private void reloadTree() {
         var treeModel = (javax.swing.tree.DefaultTreeModel) modelDirTree.getModel();
         treeModel.setRoot(treeRoot);
         treeModel.reload();
         collapseAllNodes();
+    }
+
+    private void resolveDependencies() {
+        // Find pom directories from the currently detected model dirs
+        var basePath = project.getBasePath();
+        if (basePath == null) {
+            LOG.warn("resolveDependencies: project basePath is null");
+            return;
+        }
+
+        var allModelDirs = getSelectedDirs();
+        if (allModelDirs.isEmpty()) {
+            allModelDirs = getAllModelDirs();
+        }
+        LOG.info("resolveDependencies: found " + allModelDirs.size() + " model dirs");
+
+        var pomDirs = new LinkedHashSet<Path>();
+        for (var modelDir : allModelDirs) {
+            LOG.info("resolveDependencies: searching pom.xml for model dir: " + modelDir);
+            var pomDir = findPomDir(modelDir);
+            if (pomDir != null) {
+                LOG.info("resolveDependencies: found pom dir: " + pomDir);
+                pomDirs.add(pomDir);
+            } else {
+                LOG.warn("resolveDependencies: no pom.xml found for model dir: " + modelDir);
+            }
+        }
+
+        if (pomDirs.isEmpty()) {
+            LOG.warn("resolveDependencies: no pom directories found, aborting");
+            return;
+        }
+
+        var projectArtifactIds = collectProjectArtifactIds(Path.of(basePath));
+        LOG.info("resolveDependencies: project artifact IDs to exclude: " + projectArtifactIds);
+        LOG.info("resolveDependencies: resolving dependencies for " + pomDirs.size() + " pom dirs");
+
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_RESOLVE, false) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                indicator.setText("Resolving Maven classpath...");
+                var collector = new MavenDependencyCollector();
+                var depModels = new ArrayList<DependencyModel>();
+
+                for (var pomDir : pomDirs) {
+                    try {
+                        LOG.info("resolveDependencies: collecting from " + pomDir);
+                        var collected = collector.collectFromDependencies(pomDir, projectArtifactIds);
+                        LOG.info("resolveDependencies: collected " + collected.size() + " dependency models from " + pomDir);
+                        depModels.addAll(collected);
+                    } catch (IOException | InterruptedException e) {
+                        LOG.error("resolveDependencies: failed to resolve dependencies from " + pomDir, e);
+                    }
+                }
+
+                LOG.info("resolveDependencies: total dependency models: " + depModels.size());
+                ApplicationManager.getApplication().invokeLater(() -> addDependenciesToTree(depModels));
+            }
+        });
+    }
+
+    private void addDependenciesToTree(List<DependencyModel> depModels) {
+        if (depModels.isEmpty()) return;
+
+        // Clean up previous temp dirs
+        cleanupTempDirs();
+
+        // Remove existing dependencies node if present
+        removeDependenciesNode();
+
+        // Create the "dependencies" parent node
+        var depsNode = new CheckedTreeNode(LABEL_DEPENDENCIES);
+
+        for (var dep : depModels) {
+            dependencyTempRoots.add(dep.tempRoot());
+
+            // Create artifactId node
+            var artifactNode = findChildByName(depsNode, dep.artifactId());
+            if (artifactNode == null) {
+                artifactNode = new CheckedTreeNode(dep.artifactId());
+                depsNode.add(artifactNode);
+            }
+
+            // The modelDir is the "model" directory inside the temp extraction.
+            // List its subdirectories as selectable leaves, similar to how local model dirs work.
+            // But the modelDir itself is selectable as a whole.
+            var modelDir = dep.modelDir();
+            var entry = new ModelDirEntry("model", modelDir);
+            var leafNode = new CheckedTreeNode(entry);
+            leafNode.setChecked(false);
+            artifactNode.add(leafNode);
+        }
+
+        treeRoot.add(depsNode);
+        compactTree(depsNode);
+
+        reloadTree();
+    }
+
+    private void removeDependenciesNode() {
+        Enumeration<?> children = treeRoot.children();
+        CheckedTreeNode toRemove = null;
+        while (children.hasMoreElements()) {
+            if (children.nextElement() instanceof CheckedTreeNode child
+                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                toRemove = child;
+                break;
+            }
+        }
+        if (toRemove != null) {
+            treeRoot.remove(toRemove);
+        }
+    }
+
+    private List<Path> getAllModelDirs() {
+        var result = new ArrayList<Path>();
+        collectAllModelDirs(treeRoot, result);
+        return result;
+    }
+
+    private void collectAllModelDirs(CheckedTreeNode node, List<Path> result) {
+        if (node.getUserObject() instanceof ModelDirEntry entry) {
+            result.add(entry.absolutePath());
+        }
+        Enumeration<?> children = node.children();
+        while (children.hasMoreElements()) {
+            var child = children.nextElement();
+            if (child instanceof CheckedTreeNode checkedChild) {
+                collectAllModelDirs(checkedChild, result);
+            }
+        }
+    }
+
+    private Set<String> collectProjectArtifactIds(Path projectRoot) {
+        var artifactIds = new HashSet<String>();
+        try (var stream = Files.walk(projectRoot)) {
+            stream.filter(p -> p.getFileName().toString().equals("pom.xml"))
+                    .filter(Files::isRegularFile)
+                    .forEach(pomFile -> {
+                        try {
+                            var content = Files.readString(pomFile);
+                            var matcher = java.util.regex.Pattern
+                                    .compile("<artifactId>([^<]+)</artifactId>")
+                                    .matcher(content);
+                            while (matcher.find()) {
+                                artifactIds.add(matcher.group(1).trim());
+                            }
+                        } catch (IOException e) {
+                            LOG.warn("Failed to read pom.xml: " + pomFile, e);
+                        }
+                    });
+        } catch (IOException e) {
+            LOG.warn("Failed to walk project directory: " + projectRoot, e);
+        }
+        return artifactIds;
+    }
+
+    private Path findPomDir(Path modelDir) {
+        var current = modelDir.getParent();
+        while (current != null) {
+            if (Files.isRegularFile(current.resolve("pom.xml"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return null;
     }
 
     private void insertIntoTree(CheckedTreeNode parent, Path relativePath, Path absolutePath, boolean checked) {
@@ -388,19 +581,43 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
     private List<Path> getSelectedDirs() {
         var result = new ArrayList<Path>();
-        collectCheckedDirs(treeRoot, result);
+        collectCheckedDirs(treeRoot, result, true);
         return result;
     }
 
-    private void collectCheckedDirs(CheckedTreeNode node, List<Path> result) {
-        if (node.getUserObject() instanceof ModelDirEntry entry && node.isChecked()) {
+    private List<Path> getSelectedLocalDirs() {
+        var result = new ArrayList<Path>();
+        Enumeration<?> children = treeRoot.children();
+        while (children.hasMoreElements()) {
+            if (children.nextElement() instanceof CheckedTreeNode child
+                    && !LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                collectCheckedDirs(child, result, false);
+            }
+        }
+        return result;
+    }
+
+    private List<Path> getSelectedDependencyDirs() {
+        var result = new ArrayList<Path>();
+        Enumeration<?> children = treeRoot.children();
+        while (children.hasMoreElements()) {
+            if (children.nextElement() instanceof CheckedTreeNode child
+                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                collectCheckedDirs(child, result, false);
+            }
+        }
+        return result;
+    }
+
+    private void collectCheckedDirs(CheckedTreeNode node, List<Path> result, boolean checkSelf) {
+        if (checkSelf && node.getUserObject() instanceof ModelDirEntry entry && node.isChecked()) {
             result.add(entry.absolutePath());
         }
         Enumeration<?> children = node.children();
         while (children.hasMoreElements()) {
             var child = children.nextElement();
             if (child instanceof CheckedTreeNode checkedChild) {
-                collectCheckedDirs(checkedChild, result);
+                collectCheckedDirs(checkedChild, result, true);
             }
         }
     }
@@ -436,8 +653,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     }
 
     private void runGeneration() {
-        var dirs = getSelectedDirs();
-        if (dirs.isEmpty()) return;
+        var localDirs = getSelectedLocalDirs();
+        var depDirs = getSelectedDependencyDirs();
+        if (localDirs.isEmpty() && depDirs.isEmpty()) return;
         var options = getOptions();
 
         ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
@@ -445,7 +663,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             public void run(@NotNull ProgressIndicator indicator) {
                 indicator.setText(TASK_STATUS_COLLECTING);
                 var generator = new Ips2PlantGenerator();
-                var pumlContent = generator.generate(dirs, options);
+                var pumlContent = generator.generate(localDirs, depDirs, options, indicator::setText);
 
                 ApplicationManager.getApplication().invokeLater(() ->
                         GeneratePlantUmlAction.openInEditor(project, pumlContent));
@@ -478,6 +696,30 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             }
         }
         selectAllOptionsCheck.setSelected(allSelected);
+    }
+
+    private void cleanupTempDirs() {
+        for (var tempRoot : dependencyTempRoots) {
+            try {
+                if (tempRoot != null && tempRoot.toString().contains("ips2plant-dep-")) {
+                    deleteRecursively(tempRoot);
+                }
+            } catch (IOException e) {
+                // best effort cleanup
+            }
+        }
+        dependencyTempRoots.clear();
+    }
+
+    private void deleteRecursively(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            try (var stream = Files.list(path)) {
+                for (var child : stream.toList()) {
+                    deleteRecursively(child);
+                }
+            }
+        }
+        Files.deleteIfExists(path);
     }
 
     private record ModelDirEntry(String displayName, Path absolutePath) {}

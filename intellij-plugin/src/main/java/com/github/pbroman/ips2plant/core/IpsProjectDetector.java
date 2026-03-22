@@ -1,8 +1,11 @@
 package com.github.pbroman.ips2plant.core;
 
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -35,6 +38,25 @@ public class IpsProjectDetector {
         }
     }
 
+    private boolean containsIpsFiles(Path dir) {
+        var found = new boolean[]{false};
+        try {
+            Files.walkFileTree(dir, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+                    if (file.getFileName().toString().matches(".+\\.ips.+")) {
+                        found[0] = true;
+                        return FileVisitResult.TERMINATE;
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            // if we can't walk it, treat as empty
+        }
+        return found[0];
+    }
+
     private List<Path> parseModelDirs(Path ipsProjectFile) {
         var result = new ArrayList<Path>();
         try {
@@ -49,7 +71,7 @@ public class IpsProjectDetector {
                     var sourceFolder = entry.getAttribute("sourceFolder");
                     if (!sourceFolder.isBlank()) {
                         var modelDir = ipsProjectFile.getParent().resolve(sourceFolder);
-                        if (Files.isDirectory(modelDir)) {
+                        if (Files.isDirectory(modelDir) && containsIpsFiles(modelDir)) {
                             result.add(modelDir);
                         }
                     }

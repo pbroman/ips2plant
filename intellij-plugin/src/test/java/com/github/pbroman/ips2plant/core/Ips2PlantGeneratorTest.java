@@ -73,4 +73,71 @@ class Ips2PlantGeneratorTest {
         assertThat(result).contains("A")
                 .contains("B");
     }
+
+    @Test
+    void generate_dependencyFiltering_includesDirectlyReferencedTypes() throws IOException {
+        // given: local type references a dependency type via supertype
+        var localDir = tempDir.resolve("local");
+        var depDir = tempDir.resolve("dep");
+        Files.createDirectories(localDir);
+        Files.createDirectories(depDir);
+        Files.writeString(localDir.resolve("Child.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType supertype=\"Base\"/>");
+        Files.writeString(depDir.resolve("Base.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        Files.writeString(depDir.resolve("Unrelated.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        var options = new Ips2PlantOptions();
+
+        // when
+        var result = generator.generate(List.of(localDir), List.of(depDir), options, msg -> {});
+
+        // then: Base included, Unrelated excluded
+        assertThat(result).contains("Child").contains("Base").doesNotContain("Unrelated");
+    }
+
+    @Test
+    void generate_dependencyFiltering_includesTransitivelyReferencedTypes() throws IOException {
+        // given: local -> DepA (via supertype) -> DepB (via supertype)
+        var localDir = tempDir.resolve("local");
+        var depDir = tempDir.resolve("dep");
+        Files.createDirectories(localDir);
+        Files.createDirectories(depDir);
+        Files.writeString(localDir.resolve("Child.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType supertype=\"DepA\"/>");
+        Files.writeString(depDir.resolve("DepA.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType supertype=\"DepB\"/>");
+        Files.writeString(depDir.resolve("DepB.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        Files.writeString(depDir.resolve("Unrelated.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        var options = new Ips2PlantOptions();
+
+        // when
+        var result = generator.generate(List.of(localDir), List.of(depDir), options, msg -> {});
+
+        // then: DepA and DepB both included transitively, Unrelated excluded
+        assertThat(result).contains("Child").contains("DepA").contains("DepB")
+                .doesNotContain("Unrelated");
+    }
+
+    @Test
+    void generate_dependencyFiltering_noLocalFiles_includesAllDependencies() throws IOException {
+        // given: no local files, only dependency files
+        var localDir = tempDir.resolve("local");
+        var depDir = tempDir.resolve("dep");
+        Files.createDirectories(localDir);
+        Files.createDirectories(depDir);
+        Files.writeString(depDir.resolve("A.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        Files.writeString(depDir.resolve("B.ipspolicycmpttype"),
+                "<?xml version=\"1.0\"?><PolicyCmptType/>");
+        var options = new Ips2PlantOptions();
+
+        // when
+        var result = generator.generate(List.of(localDir), List.of(depDir), options, msg -> {});
+
+        // then: all dependency files included unfiltered
+        assertThat(result).contains("A").contains("B");
+    }
 }

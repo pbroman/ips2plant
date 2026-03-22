@@ -71,4 +71,5 @@ public class Ips2PlantOptions {
 
     public int getConnectorLength() { return connectorLength; }
     public void setConnectorLength(int connectorLength) { this.connectorLength = connectorLength; }
+
 }

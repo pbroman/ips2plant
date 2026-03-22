@@ -44,32 +44,44 @@ The right-click action uses the diagram options configured in the tool window (s
 6. The generated `.puml` opens in the editor
 7. The diagram is regenerated when options are changed
 
-## Diagram Options
+### Resolve Dependencies
 
-| Option                  | Description                                                       |
-|-------------------------|-------------------------------------------------------------------|
-| Packages                | Groups classes into their packages                                |
-| Print target role       | Shows the `targetRolePlural` on composition arrows                |
-| External supertypes     | Adds inheritance for supertypes not present in the scanned models |
-| External associations   | Adds associations to classes not present in the scanned models    |
-| Show tables             | Includes table structures in the diagram                          |
-| Show table usage        | Shows table usage by product component types                      |
-| Show enum types         | Includes enum types in the diagram                                |
-| Show enum associations  | Shows enum associations (including external enums)                |
-| Show product components | Includes product component types in the diagram                   |
-| Package filter          | Limits the diagram to a specific package and its associations     |
-| Connector length        | Length of association connectors (default: 2)                     |
+The plugin can include IPS model files from Maven dependency JARs in the diagram. This is useful when your project depends on shared base models (e.g. `de.faktorzehn` artifacts) and you want to see the full class hierarchy.
+
+1. Select one or more model directories in the tree (or leave all unchecked to use all detected directories)
+2. Click **Resolve Dependencies**
+3. The plugin runs `mvn dependency:build-classpath` on the corresponding `pom.xml`, scans the resolved JARs for IPS model files (`model/**/*.ips*`), and extracts them to a temporary directory
+4. The extracted dependency models appear under a **dependencies** node in the tree
+5. Check the dependency models you want to include and click **Generate PlantUML**
+
+Only external `de.faktorzehn` group dependencies are resolved — JARs belonging to modules within the current project are automatically excluded. The plugin locates Maven via `MAVEN_HOME`, `M2_HOME`, `PATH`, or common installation directories.
+
+### Diagram Options
+
+| Option                  | Description                                                                     |
+|-------------------------|---------------------------------------------------------------------------------|
+| Packages                | Groups classes into their packages                                              |
+| Print target role       | Shows the `targetRolePlural` on composition arrows                              |
+| External supertypes     | Adds inheritance of super types in dependencies or not in the selected packages |
+| External associations   | Adds associations to classes not in the selected packages                       |
+| Show tables             | Includes table structures in the diagram                                        |
+| Show table usage        | Shows table usage by product component types                                    |
+| Show enum types         | Includes enum types in the diagram                                              |
+| Show enum associations  | Shows enum associations (including external enums)                              |
+| Show product components | Includes product component types in the diagram                                 |
+| Package filter          | Limits the diagram to a specific package and its associations                   |
+| Connector length        | Length of association connectors (default: 2)                                   |
 
 ## Attribute Types
 
 Attribute visibility markers represent Faktor-IPS attribute types:
 
 | Marker | Attribute Type |
-|--------|---------------|
-| `+`    | changeable    |
-| `~`    | derived       |
-| `#`    | computed      |
-| `-`    | constant      |
+|--------|----------------|
+| `+`    | changeable     |
+| `~`    | derived        |
+| `#`    | computed       |
+| `-`    | constant       |
 
 ## Tips
 
