@@ -67,13 +67,11 @@ The search panel lets you find specific IPS classes by name and generate a diagr
 5. Uncheck classes to exclude them and the diagram regenerates accordingly
 6. Clear the search field to dismiss the search results and return to directory-based generation
 
-The search is case-insensitive and matches against the simple class name (not the fully qualified name).
+The search searches all selected model directories, including selected dependencies. If no directories are selected, all model directories (local and resolved dependencies) are searched. The search is case-insensitive and matches against the simple class name (not the fully qualified name).
 
 **Add Supertypes**: Transitively adds all parent classes (supertypes, their supertypes, etc.) of the found classes to the diagram. The added classes are not part of the search results and have no checkboxes — they only appear in the generated PlantUML.
 
 **Add Referencing Classes**: Adds all classes that directly reference any of the found classes through associations (composition, association, aggregation). Like supertypes, these are only included in the diagram, not in the search result list.
-
-**Include Dependencies**: Check this option to also search in dependency JARs. If dependencies have not been resolved yet, the plugin will resolve them automatically before searching.
 
 ### Diagram Options
 

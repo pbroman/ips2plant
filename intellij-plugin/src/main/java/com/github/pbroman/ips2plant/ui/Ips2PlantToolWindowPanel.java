@@ -68,11 +68,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String LABEL_PRINT_TARGET_ROLE = "Print target role";
     private static final String LABEL_EXTERNAL_SUPERTYPES = "External supertypes";
     private static final String LABEL_EXTERNAL_ASSOCIATIONS = "External associations";
-    private static final String LABEL_SHOW_TABLES = "Show tables";
+    private static final String LABEL_SHOW_TABLE_STRUCTURES = "Show table structures";
     private static final String LABEL_SHOW_TABLE_USAGE = "Show table usage";
     private static final String LABEL_SHOW_ENUM_TYPES = "Show enum types";
     private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Show enum associations";
     private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Show product components";
+    private static final String LABEL_CLEAR_DEPENDENCIES = "Clear Dependencies";
     private static final String LABEL_RESOLVE_DEPENDENCIES = "Resolve Dependencies";
     private static final String LABEL_PACKAGE_FILTER = "Package filter:";
     private static final String LABEL_CONNECTOR_LENGTH = "Connector length:";
@@ -87,24 +88,23 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_PRINT_TARGET_ROLE = "Print the targetRolePlural attribute on the composition arrow";
     private static final String TOOLTIP_EXTERNAL_SUPERTYPES = "Adds inheritance of supertypes in dependencies or not in the selected packages";
     private static final String TOOLTIP_EXTERNAL_ASSOCIATIONS = "Adds associations to classes not in the selected packages";
-    private static final String TOOLTIP_SHOW_TABLES = "Show tables";
+    private static final String TOOLTIP_SHOW_TABLE_STRUCTURES = "Show table structures";
     private static final String TOOLTIP_SHOW_TABLE_USAGE = "Show table usage by product component types (including external tables)";
     private static final String TOOLTIP_SHOW_ENUM_TYPES = "Show enum types";
     private static final String TOOLTIP_SHOW_ENUM_ASSOCIATIONS = "Show enum associations (including external enums)";
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
+    private static final String TOOLTIP_CLEAR_DEPENDENCIES = "Clear all resolved dependencies and remove them from the tree";
     private static final String TOOLTIP_RESOLVE_DEPENDENCIES = "Resolve Maven dependencies of selected modules and show IPS model files from dependency JARs";
-    private static final String TOOLTIP_PACKAGE_FILTER = "Filter the diagram to a package and its associations";
+    private static final String TOOLTIP_PACKAGE_FILTER = "Filter the diagram by packages (comma separated list)";
     private static final String TOOLTIP_CONNECTOR_LENGTH = "Length of association connectors";
     private static final String TOOLTIP_GENERATE = "Generate PlantUML class diagram from selected IPS model directories";
 
     private static final String TITLE_SEARCH = "Search";
     private static final String LABEL_SEARCH = "Search";
-    private static final String LABEL_INCLUDE_DEPENDENCIES = "Include Dependencies";
     private static final String LABEL_ADD_SUPERTYPES = "Add Supertypes";
     private static final String LABEL_ADD_REFERENCING = "Add Referencing Classes";
     private static final String TOOLTIP_SEARCH_FIELD = "Search for IPS classes by name (* wildcard supported, e.g. *Contract*) - emptying the window clears the search";
     private static final String TOOLTIP_SEARCH_BUTTON = "Search for IPS classes matching the pattern";
-    private static final String TOOLTIP_INCLUDE_DEPENDENCIES = "Include dependency JARs in search (resolves dependencies if needed)";
     private static final String TOOLTIP_ADD_SUPERTYPES = "Transitively add all supertypes (parents, grandparents, etc.) of found classes to the diagram";
     private static final String TOOLTIP_ADD_REFERENCING = "Add all classes that reference found classes through associations";
     private static final String TOOLTIP_SEARCH_RESULTS = "Check/uncheck classes to include in the generated PlantUML diagram";
@@ -123,7 +123,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
     // Search
     private final JTextField searchField = withTooltip(new JTextField(15), TOOLTIP_SEARCH_FIELD);
-    private final JCheckBox includeDepsCheck = withTooltip(new JCheckBox(LABEL_INCLUDE_DEPENDENCIES), TOOLTIP_INCLUDE_DEPENDENCIES);
     private final JCheckBox addSupertypesCheck = withTooltip(new JCheckBox(LABEL_ADD_SUPERTYPES), TOOLTIP_ADD_SUPERTYPES);
     private final JCheckBox addReferencingCheck = withTooltip(new JCheckBox(LABEL_ADD_REFERENCING), TOOLTIP_ADD_REFERENCING);
     private final CheckBoxList<String> searchResultsList = new CheckBoxList<>();
@@ -140,7 +139,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox printTargetRoleCheck = withTooltip(new JCheckBox(LABEL_PRINT_TARGET_ROLE), TOOLTIP_PRINT_TARGET_ROLE);
     private final JCheckBox addSuperTypeCheck = withTooltip(new JCheckBox(LABEL_EXTERNAL_SUPERTYPES), TOOLTIP_EXTERNAL_SUPERTYPES);
     private final JCheckBox addAssociationsCheck = withTooltip(new JCheckBox(LABEL_EXTERNAL_ASSOCIATIONS), TOOLTIP_EXTERNAL_ASSOCIATIONS);
-    private final JCheckBox showTablesCheck = withTooltip(new JCheckBox(LABEL_SHOW_TABLES), TOOLTIP_SHOW_TABLES);
+    private final JCheckBox showTablesCheck = withTooltip(new JCheckBox(LABEL_SHOW_TABLE_STRUCTURES), TOOLTIP_SHOW_TABLE_STRUCTURES);
     private final JCheckBox showTableUsageCheck = withTooltip(new JCheckBox(LABEL_SHOW_TABLE_USAGE), TOOLTIP_SHOW_TABLE_USAGE);
     private final JCheckBox showEnumTypesCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_TYPES), TOOLTIP_SHOW_ENUM_TYPES);
     private final JCheckBox showEnumAssocCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_ASSOCIATIONS), TOOLTIP_SHOW_ENUM_ASSOCIATIONS);
@@ -212,13 +211,17 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         treeScrollPane.setBorder(null);
         modelSection.add(treeScrollPane, BorderLayout.CENTER);
 
-        // Resolve dependencies button below the tree
+        // Dependency buttons below the tree
+        var clearDepsButton = new JButton(LABEL_CLEAR_DEPENDENCIES);
+        clearDepsButton.setToolTipText(TOOLTIP_CLEAR_DEPENDENCIES);
+        clearDepsButton.addActionListener(e -> clearDependencies());
         var resolveButton = new JButton(LABEL_RESOLVE_DEPENDENCIES);
         resolveButton.setToolTipText(TOOLTIP_RESOLVE_DEPENDENCIES);
         resolveButton.addActionListener(e -> resolveDependencies());
-        var resolvePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        resolvePanel.add(resolveButton);
-        modelSection.add(resolvePanel, BorderLayout.SOUTH);
+        var dependenciesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        dependenciesPanel.add(resolveButton);
+        dependenciesPanel.add(clearDepsButton);
+        modelSection.add(dependenciesPanel, BorderLayout.SOUTH);
 
         modelSection.setMinimumSize(new Dimension(0, 80));
 
@@ -266,9 +269,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchBottomPanel.add(addSupertypesCheck, sgbc);
         sgbc.gridx = 1; sgbc.weightx = 0.5;
         searchBottomPanel.add(addReferencingCheck, sgbc);
-        sgbc.gridy = 1;
-        sgbc.gridx = 0; sgbc.weightx = 0.5;
-        searchBottomPanel.add(includeDepsCheck, sgbc);
         searchSection.add(searchBottomPanel, BorderLayout.SOUTH);
 
         searchSection.setMinimumSize(new Dimension(0, 80));
@@ -454,9 +454,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             return;
         }
 
-        var allModelDirs = getSelectedDirs();
+        var allModelDirs = getSelectedLocalDirs();
         if (allModelDirs.isEmpty()) {
-            allModelDirs = getAllModelDirs();
+            allModelDirs = getAllLocalModelDirs();
         }
         LOG.info("resolveDependencies: found " + allModelDirs.size() + " model dirs");
 
@@ -505,6 +505,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         });
     }
 
+    private void clearDependencies() {
+        cleanupTempDirs();
+        removeDependenciesNode();
+        reloadTree();
+    }
+
     private void addDependenciesToTree(List<DependencyModel> depModels) {
         if (depModels.isEmpty()) return;
 
@@ -543,12 +549,17 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         reloadTree();
     }
 
+    private boolean isDependenciesNode(CheckedTreeNode node) {
+        return node.getUserObject() instanceof String text
+                && (text.equals(LABEL_DEPENDENCIES) || text.startsWith(LABEL_DEPENDENCIES + "/"));
+    }
+
     private void removeDependenciesNode() {
         Enumeration<?> children = treeRoot.children();
         CheckedTreeNode toRemove = null;
         while (children.hasMoreElements()) {
             if (children.nextElement() instanceof CheckedTreeNode child
-                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                    && isDependenciesNode(child)) {
                 toRemove = child;
                 break;
             }
@@ -556,12 +567,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         if (toRemove != null) {
             treeRoot.remove(toRemove);
         }
-    }
-
-    private List<Path> getAllModelDirs() {
-        var result = new ArrayList<Path>();
-        collectAllModelDirs(treeRoot, result);
-        return result;
     }
 
     private void collectAllModelDirs(CheckedTreeNode node, List<Path> result) {
@@ -579,16 +584,20 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
     private Set<String> collectProjectArtifactIds(Path projectRoot) {
         var artifactIds = new HashSet<String>();
+        var artifactPattern = java.util.regex.Pattern.compile("<artifactId>([^<]+)</artifactId>");
         try (var stream = Files.walk(projectRoot)) {
             stream.filter(p -> p.getFileName().toString().equals("pom.xml"))
                     .filter(Files::isRegularFile)
                     .forEach(pomFile -> {
                         try {
                             var content = Files.readString(pomFile);
-                            var matcher = java.util.regex.Pattern
-                                    .compile("<artifactId>([^<]+)</artifactId>")
-                                    .matcher(content);
-                            while (matcher.find()) {
+                            // Only look at the part before <dependencies> to avoid collecting dependency artifactIds
+                            var depsIndex = content.indexOf("<dependencies");
+                            var header = depsIndex >= 0 ? content.substring(0, depsIndex) : content;
+                            // Strip <parent> block to avoid collecting the parent artifactId
+                            header = header.replaceAll("(?s)<parent>.*?</parent>", "");
+                            var matcher = artifactPattern.matcher(header);
+                            if (matcher.find()) {
                                 artifactIds.add(matcher.group(1).trim());
                             }
                         } catch (IOException e) {
@@ -688,18 +697,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         }
     }
 
-    private List<Path> getSelectedDirs() {
-        var result = new ArrayList<Path>();
-        collectCheckedDirs(treeRoot, result, true);
-        return result;
-    }
-
     private List<Path> getSelectedLocalDirs() {
         var result = new ArrayList<Path>();
         Enumeration<?> children = treeRoot.children();
         while (children.hasMoreElements()) {
             if (children.nextElement() instanceof CheckedTreeNode child
-                    && !LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                    && !isDependenciesNode(child)) {
                 collectCheckedDirs(child, result, false);
             }
         }
@@ -711,7 +714,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         Enumeration<?> children = treeRoot.children();
         while (children.hasMoreElements()) {
             if (children.nextElement() instanceof CheckedTreeNode child
-                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                    && isDependenciesNode(child)) {
                 collectCheckedDirs(child, result, false);
             }
         }
@@ -768,21 +771,14 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         LOG.info("runSearch: pattern='" + pattern + "'");
 
         var selectedLocal = getSelectedLocalDirs();
-        var searchDirs = new ArrayList<>(selectedLocal.isEmpty() ? getAllLocalModelDirs() : selectedLocal);
-
-        boolean includeDeps = includeDepsCheck.isSelected();
-        if (includeDeps) {
-            var depDirs = getAllDependencyDirs();
-            if (depDirs.isEmpty()) {
-                LOG.info("runSearch: dependencies not yet resolved, resolving first");
-                resolveAndThenSearch(pattern, searchDirs);
-                return;
-            }
-            if (selectedLocal.isEmpty()) {
-                searchDirs.addAll(depDirs);
-            } else {
-                searchDirs.addAll(getSelectedDependencyDirs().isEmpty() ? depDirs : getSelectedDependencyDirs());
-            }
+        var selectedDeps = getSelectedDependencyDirs();
+        var searchDirs = new ArrayList<Path>();
+        if (selectedLocal.isEmpty() && selectedDeps.isEmpty()) {
+            searchDirs.addAll(getAllLocalModelDirs());
+            searchDirs.addAll(getAllDependencyDirs());
+        } else {
+            searchDirs.addAll(selectedLocal);
+            searchDirs.addAll(selectedDeps);
         }
 
         LOG.info("runSearch: searching in " + searchDirs.size() + " directories");
@@ -799,61 +795,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         });
     }
 
-    private void resolveAndThenSearch(String pattern, List<Path> localSearchDirs) {
-        var basePath = project.getBasePath();
-        if (basePath == null) return;
-
-        var modelDirs = getSelectedDirs();
-        if (modelDirs.isEmpty()) {
-            modelDirs = getAllModelDirs();
-        }
-
-        var pomDirs = new LinkedHashSet<Path>();
-        for (var modelDir : modelDirs) {
-            var pomDir = findPomDir(modelDir);
-            if (pomDir != null) pomDirs.add(pomDir);
-        }
-        if (pomDirs.isEmpty()) return;
-
-        var projectArtifactIds = collectProjectArtifactIds(Path.of(basePath));
-
-        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_RESOLVE, false) {
-            @Override
-            public void run(@NotNull ProgressIndicator indicator) {
-                indicator.setText("Resolving Maven classpath...");
-                var collector = new MavenDependencyCollector();
-                var depModels = new ArrayList<DependencyModel>();
-
-                for (var pomDir : pomDirs) {
-                    try {
-                        depModels.addAll(collector.collectFromDependencies(pomDir, projectArtifactIds));
-                    } catch (IOException | InterruptedException e) {
-                        LOG.error("resolveAndThenSearch: failed to resolve dependencies from " + pomDir, e);
-                    }
-                }
-
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    addDependenciesToTree(depModels);
-
-                    // Now run the search with the newly resolved dependency dirs
-                    var searchDirs = new ArrayList<>(localSearchDirs);
-                    searchDirs.addAll(getAllDependencyDirs());
-                    var dirsToSearch = List.copyOf(searchDirs);
-
-                    ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE_SEARCH, false) {
-                        @Override
-                        public void run(@NotNull ProgressIndicator indicator2) {
-                            indicator2.setText("Searching for IPS classes...");
-                            var searcher = new IpsClassSearcher();
-                            var results = searcher.search(pattern, dirsToSearch);
-                            ApplicationManager.getApplication().invokeLater(() -> updateSearchResults(results));
-                        }
-                    });
-                });
-            }
-        });
-    }
-
     private void updateSearchResults(Map<String, File> results) {
         searchResults.clear();
         searchResults.putAll(results);
@@ -866,9 +807,23 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             for (var className : results.keySet()) {
                 searchResultsList.addItem(className, className, true);
             }
+            autoEnableOptionsForResults(results);
             searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
             // Auto-generate PlantUML for the found classes
             runGeneration();
+        }
+    }
+
+    private void autoEnableOptionsForResults(Map<String, File> results) {
+        for (var file : results.values()) {
+            var name = file.getName();
+            if (name.endsWith(".ipsproductcmpttype")) {
+                showProductCheck.setSelected(true);
+            } else if (name.endsWith(".ipstablestructure")) {
+                showTablesCheck.setSelected(true);
+            } else if (name.endsWith(".ipsenumtype")) {
+                showEnumTypesCheck.setSelected(true);
+            }
         }
     }
 
@@ -883,7 +838,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         Enumeration<?> children = treeRoot.children();
         while (children.hasMoreElements()) {
             if (children.nextElement() instanceof CheckedTreeNode child
-                    && !LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                    && !isDependenciesNode(child)) {
                 collectAllModelDirs(child, result);
             }
         }
@@ -895,7 +850,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         Enumeration<?> children = treeRoot.children();
         while (children.hasMoreElements()) {
             if (children.nextElement() instanceof CheckedTreeNode child
-                    && LABEL_DEPENDENCIES.equals(child.getUserObject())) {
+                    && isDependenciesNode(child)) {
                 collectAllModelDirs(child, result);
             }
         }

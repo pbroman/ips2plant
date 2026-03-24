@@ -32,7 +32,7 @@ public class MavenDependencyCollector {
     private static final Logger LOG = Logger.getInstance(MavenDependencyCollector.class);
 
     private static final String MODEL_PREFIX = "model/";
-    private static final Pattern JAR_ARTIFACT_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9._-]*)-\\d.*\\.jar$");
+    private static final Pattern JAR_ARTIFACT_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9.]*(?:-[a-zA-Z][a-zA-Z0-9.]*)*)-\\d.*\\.jar$");
 
     private final Set<String> resolvedArtifacts = new HashSet<>();
 

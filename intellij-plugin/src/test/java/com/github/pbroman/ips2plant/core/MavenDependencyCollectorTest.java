@@ -163,6 +163,7 @@ class MavenDependencyCollectorTest {
 
     @ParameterizedTest
     @CsvSource({
+            "/repo/de/dings/im-base-domain/26.7.0-a20260319-01/im-base-domain-26.7.0-a20260319-01.jar, im-base-domain",
             "/repo/com/example/my-artifact-1.2.3.jar, my-artifact",
             "/repo/org/foo/bar-baz-2.0.0-SNAPSHOT.jar, bar-baz",
             "/repo/some-lib-0.1.jar, some-lib",
