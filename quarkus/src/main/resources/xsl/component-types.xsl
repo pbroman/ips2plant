@@ -59,10 +59,10 @@
 
             <!-- Inheritance -->
             <xsl:variable name="isSupertypePresent">
-                <xsl:call-template name="is-target-present">
-                    <xsl:with-param name="componentType" select="$componentType"/>
-                    <xsl:with-param name="targetClassName" select="@supertype"/>
-                </xsl:call-template>
+                <xsl:choose>
+                    <xsl:when test="$componentType = 'PolicyCmptType'"><xsl:value-of select="../PolicyCmptType[@className=current()/@supertype]"/></xsl:when>
+                    <xsl:otherwise><xsl:value-of select="../ProductCmptType2[@className=current()/@supertype]"/></xsl:otherwise>
+                </xsl:choose>
             </xsl:variable>
             <xsl:call-template name="inheritance">
                 <xsl:with-param name="classNameWithPackage" select="$classNameWithPackage"/>
