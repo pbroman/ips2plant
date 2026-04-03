@@ -31,7 +31,7 @@
         <xsl:param name="isSupertypePresent"/>
 
         <xsl:if test="$supertypeAttr and f:matches-package-filter($classNameWithPackage)">
-            <xsl:if test="$isSupertypePresent != '' or $addSuperType = 'true'">
+            <xsl:if test="($isSupertypePresent != '' and f:matches-package-filter($supertypeAttr)) or $addSuperType = 'true'">
                 <xsl:value-of select="concat(f:class-name($supertypeAttr), ' &lt;|', $connector, ' ', $className, '&#xa;')"/>
             </xsl:if>
         </xsl:if>
