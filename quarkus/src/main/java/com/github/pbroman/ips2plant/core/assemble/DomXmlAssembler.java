@@ -23,10 +23,14 @@ public class DomXmlAssembler implements XmlAssembler {
 
     @Override
     public void assemble(Map<String, File> ipsFiles, Path destination) {
+        assemble(ipsFiles, destination, Map.of());
+    }
 
+    @Override
+    public void assemble(Map<String, File> ipsFiles, Path destination, Map<String, String> mavenModules) {
         try {
             var domBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-            var collection = assemble(domBuilder, ipsFiles);
+            var collection = assemble(domBuilder, ipsFiles, mavenModules);
             writeToDestination(collection, destination);
 
         } catch (ParserConfigurationException | IOException | SAXException | TransformerException e) {
@@ -35,7 +39,7 @@ public class DomXmlAssembler implements XmlAssembler {
     }
 
 
-    private Document assemble(DocumentBuilder builder, Map<String, File> ipsFiles) throws IOException, SAXException {
+    private Document assemble(DocumentBuilder builder, Map<String, File> ipsFiles, Map<String, String> mavenModules) throws IOException, SAXException {
 
         // Create collection
         var collectionDoc = builder.newDocument();
@@ -47,6 +51,10 @@ public class DomXmlAssembler implements XmlAssembler {
             var ipsDoc = builder.parse(entry.getValue());
             var ipsRoot = ipsDoc.getDocumentElement();
             ipsRoot.setAttribute("className", entry.getKey());
+            var mavenModule = mavenModules.get(entry.getKey());
+            if (mavenModule != null) {
+                ipsRoot.setAttribute("mavenModule", mavenModule);
+            }
             ipsRoot.removeAttribute("xmlns");
             ipsRoot.removeAttribute("xmlns:xsi");
             ipsRoot.removeAttribute("xsi:schemaLocation");

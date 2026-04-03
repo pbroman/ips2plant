@@ -14,6 +14,10 @@
             <!-- Class definition -->
             <xsl:if test="f:matches-package-filter($classNameWithPackage)">
                 <xsl:value-of select="concat('class ', $className, $classType, ' { &#xa;')"/>
+                <xsl:if test="$showMavenModule = 'true' and @mavenModule">
+                    <xsl:value-of select="concat('  ', @mavenModule, '&#xa;')"/>
+                    <xsl:text>  --&#xa;</xsl:text>
+                </xsl:if>
                 <xsl:for-each select="Column">
                     <xsl:sort select="@name"/>
                     <xsl:value-of select="concat('  ', @name, ': ', f:substring-after-last(@datatype, '.'), '&#xa;')"/>

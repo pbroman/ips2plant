@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import com.github.pbroman.ips2plant.core.api.IpsFileCollector;
 import com.github.pbroman.ips2plant.core.api.XmlAssembler;
 import com.github.pbroman.ips2plant.core.api.XsltProcessor;
+import com.github.pbroman.ips2plant.core.resolve.MavenModuleResolver;
 
 public class Ips2PlantRunner {
 
@@ -67,7 +68,13 @@ public class Ips2PlantRunner {
         if (modelPathsGiven) {
             log.info("Assembling ips models...");
             var ipsFiles = collector.collect(modelDirPaths);
-            assembler.assemble(ipsFiles, collection);
+            if ("true".equals(stringParams.get("showMavenModule"))) {
+                var resolver = new MavenModuleResolver();
+                var mavenModules = resolver.resolveAll(ipsFiles);
+                assembler.assemble(ipsFiles, collection, mavenModules);
+            } else {
+                assembler.assemble(ipsFiles, collection);
+            }
         }
 
         // Packed in an uber-jar, the resources will be zipped, so we have to copy them to a temp directory

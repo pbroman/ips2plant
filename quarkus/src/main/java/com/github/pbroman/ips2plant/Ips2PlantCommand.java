@@ -97,6 +97,11 @@ public class Ips2PlantCommand implements Callable<Integer> {
         setTrue("packages");
     }
 
+    @Option(names = {"-m", "--maven"}, description = "Shows in which Maven module the classes are defined")
+    private void showMavenModule(boolean dummy) {
+        setTrue("showMavenModule");
+    }
+
     private void setTrue(String param) {
         xsltParams.put(param, "true");
     }

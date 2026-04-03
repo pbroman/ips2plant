@@ -19,6 +19,10 @@ import org.xml.sax.SAXException;
 public class XmlAssembler {
 
     public String assemble(Map<String, File> ipsFiles) {
+        return assemble(ipsFiles, Map.of());
+    }
+
+    public String assemble(Map<String, File> ipsFiles, Map<String, String> mavenModules) {
         try {
             var domBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 
@@ -30,6 +34,10 @@ public class XmlAssembler {
                 var ipsDoc = domBuilder.parse(entry.getValue());
                 var ipsRoot = ipsDoc.getDocumentElement();
                 ipsRoot.setAttribute("className", entry.getKey());
+                var mavenModule = mavenModules.get(entry.getKey());
+                if (mavenModule != null) {
+                    ipsRoot.setAttribute("mavenModule", mavenModule);
+                }
                 ipsRoot.removeAttribute("xmlns");
                 ipsRoot.removeAttribute("xmlns:xsi");
                 ipsRoot.removeAttribute("xsi:schemaLocation");

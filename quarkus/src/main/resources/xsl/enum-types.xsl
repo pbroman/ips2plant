@@ -29,6 +29,10 @@
                     <xsl:text>abstract </xsl:text>
                 </xsl:if>
                 <xsl:value-of select="concat('class ', $className, $classType, ' { &#xa;')"/>
+                <xsl:if test="$showMavenModule = 'true' and @mavenModule">
+                    <xsl:value-of select="concat('  ', @mavenModule, '&#xa;')"/>
+                    <xsl:text>  --&#xa;</xsl:text>
+                </xsl:if>
                 <xsl:for-each select="EnumAttribute">
                     <xsl:sort select="@name"/>
                     <xsl:variable name="datatype">

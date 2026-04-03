@@ -7,4 +7,8 @@ import java.util.Map;
 public interface XmlAssembler {
 
     void assemble(Map<String, File> ipsFiles, Path destination);
+
+    default void assemble(Map<String, File> ipsFiles, Path destination, Map<String, String> mavenModules) {
+        assemble(ipsFiles, destination);
+    }
 }

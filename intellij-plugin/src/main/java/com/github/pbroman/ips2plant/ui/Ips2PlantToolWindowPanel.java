@@ -71,6 +71,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String LABEL_SHOW_TABLE_USAGE = "Table Usage";
     private static final String LABEL_SHOW_ENUM_TYPES = "Enum Types";
     private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Enum Associations";
+    private static final String LABEL_SHOW_MAVEN_MODULE = "Maven Modules";
     private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Product Components";
     private static final String LABEL_CLEAR_DEPENDENCIES = "Clear Dependencies";
     private static final String LABEL_RESOLVE_DEPENDENCIES = "Resolve Dependencies";
@@ -91,6 +92,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_SHOW_TABLE_USAGE = "Show table usage by product component types (including external tables)";
     private static final String TOOLTIP_SHOW_ENUM_TYPES = "Show enum types";
     private static final String TOOLTIP_SHOW_ENUM_ASSOCIATIONS = "Show enum associations (including external enums)";
+    private static final String TOOLTIP_SHOW_MAVEN_MODULE = "Show the modules where the classes are defined";
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
     private static final String TOOLTIP_CLEAR_DEPENDENCIES = "Clear all resolved dependencies and remove them from the tree";
     private static final String TOOLTIP_RESOLVE_DEPENDENCIES = "Resolve Maven dependencies of selected modules and show IPS model files from dependency JARs";
@@ -125,6 +127,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private boolean propagating;
     // Track temp dirs from dependency extraction for cleanup
     private final List<Path> dependencyTempRoots = new ArrayList<>();
+    // Track dependency model dir -> maven module (groupId:artifactId) for resolved dependencies
+    private final Map<Path, String> dependencyMavenModules = new LinkedHashMap<>();
 
     // Search
     private final JTextField searchField = withTooltip(new JTextField(15), TOOLTIP_SEARCH_FIELD);
@@ -150,6 +154,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox showTableUsageCheck = withTooltip(new JCheckBox(LABEL_SHOW_TABLE_USAGE), TOOLTIP_SHOW_TABLE_USAGE);
     private final JCheckBox showEnumTypesCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_TYPES), TOOLTIP_SHOW_ENUM_TYPES);
     private final JCheckBox showEnumAssocCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_ASSOCIATIONS), TOOLTIP_SHOW_ENUM_ASSOCIATIONS);
+    private final JCheckBox showMavenModuleCheck = withTooltip(new JCheckBox(LABEL_SHOW_MAVEN_MODULE), TOOLTIP_SHOW_MAVEN_MODULE);
     private final JCheckBox showProductCheck = withTooltip(new JCheckBox(LABEL_SHOW_PRODUCT_COMPONENTS), TOOLTIP_SHOW_PRODUCT_COMPONENTS);
     private final JTextField packageFilterField = withTooltip(new JTextField(15), TOOLTIP_PACKAGE_FILTER);
     private final JSpinner connectorLengthSpinner = withTooltip(new JSpinner(new SpinnerNumberModel(2, 1, 10, 1)), TOOLTIP_CONNECTOR_LENGTH);
@@ -319,7 +324,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         int row = 0;
 
         JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showProductCheck,
-                showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumAssocCheck };
+                showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumAssocCheck, showMavenModuleCheck };
 
         selectAllOptionsCheck.addActionListener(e -> {
             boolean selected = selectAllOptionsCheck.isSelected();
@@ -350,7 +355,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         optionsPanel.add(resetAllButton, gbc);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JCheckBox[] leftColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showEnumAssocCheck };
+        JCheckBox[] leftColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showEnumAssocCheck };
         JCheckBox[] rightColumn = { showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck };
 
         int maxRows = Math.max(leftColumn.length, rightColumn.length);
@@ -539,6 +544,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
     private void clearDependencies() {
         cleanupTempDirs();
+        dependencyMavenModules.clear();
         removeDependenciesNode();
         reloadTree();
     }
@@ -546,8 +552,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private void addDependenciesToTree(List<DependencyModel> depModels) {
         if (depModels.isEmpty()) return;
 
-        // Clean up previous temp dirs
+        // Clean up previous temp dirs and maven module mappings
         cleanupTempDirs();
+        dependencyMavenModules.clear();
 
         // Remove existing dependencies node if present
         removeDependenciesNode();
@@ -557,6 +564,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         for (var dep : depModels) {
             dependencyTempRoots.add(dep.tempRoot());
+            if (dep.mavenModule() != null) {
+                dependencyMavenModules.put(dep.modelDir(), dep.mavenModule());
+            }
 
             // Create artifactId node
             var artifactNode = findChildByName(depsNode, dep.artifactId());
@@ -936,7 +946,15 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                         ipsFiles = new LinkedHashMap<>(searcher.addReferencingClasses(ipsFiles, allDirs));
                     }
                     var generator = new Ips2PlantGenerator();
-                    var pumlContent = generator.generate(ipsFiles, options, indicator::setText);
+                    Map<String, String> mavenModules = Map.of();
+                    if (options.isShowMavenModule()) {
+                        var resolver = new com.github.pbroman.ips2plant.core.MavenModuleResolver();
+                        for (var depEntry : dependencyMavenModules.entrySet()) {
+                            resolver.registerModule(depEntry.getKey(), depEntry.getValue());
+                        }
+                        mavenModules = resolver.resolveAll(ipsFiles);
+                    }
+                    var pumlContent = generator.generate(ipsFiles, options, indicator::setText, mavenModules);
 
                     ApplicationManager.getApplication().invokeLater(() ->
                             GeneratePlantUmlAction.openInEditor(project, pumlContent));
@@ -951,13 +969,14 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                 return;
             }
 
+            var depModules = Map.copyOf(dependencyMavenModules);
             LOG.info("runGeneration: generating from " + localDirs.size() + " local dirs + " + depDirs.size() + " dependency dirs");
             ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
                 @Override
                 public void run(@NotNull ProgressIndicator indicator) {
                     indicator.setText(TASK_STATUS_COLLECTING);
                     var generator = new Ips2PlantGenerator();
-                    var pumlContent = generator.generate(localDirs, depDirs, options, indicator::setText);
+                    var pumlContent = generator.generate(localDirs, depDirs, options, indicator::setText, depModules);
 
                     ApplicationManager.getApplication().invokeLater(() ->
                             GeneratePlantUmlAction.openInEditor(project, pumlContent));
@@ -977,6 +996,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         options.setShowEnumTypes(showEnumTypesCheck.isSelected());
         options.setShowEnumAssociations(showEnumAssocCheck.isSelected());
         options.setShowProductComponents(showProductCheck.isSelected());
+        options.setShowMavenModule(showMavenModuleCheck.isSelected());
         options.setPackageFilter(packageFilterField.getText().trim());
         options.setConnectorLength((int) connectorLengthSpinner.getValue());
         return options;

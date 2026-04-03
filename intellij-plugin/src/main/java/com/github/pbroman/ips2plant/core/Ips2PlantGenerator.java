@@ -23,16 +23,25 @@ public class Ips2PlantGenerator {
     }
 
     public String generate(Map<String, File> ipsFiles, Ips2PlantOptions options, Consumer<String> statusCallback) {
+        return generate(ipsFiles, options, statusCallback, Map.of());
+    }
+
+    public String generate(Map<String, File> ipsFiles, Ips2PlantOptions options, Consumer<String> statusCallback, Map<String, String> mavenModules) {
         if (ipsFiles.isEmpty()) {
             return "@startuml\nnote \"No IPS model files found\" as N1\n@enduml";
         }
 
-        var collectionXml = assembler.assemble(ipsFiles);
+        var collectionXml = assembler.assemble(ipsFiles, mavenModules);
         statusCallback.accept("Transforming to PlantUML...");
         return xsltProcessor.transform(collectionXml, options.toXsltParams());
     }
 
     public String generate(List<Path> localDirs, List<Path> dependencyDirs, Ips2PlantOptions options, Consumer<String> statusCallback) {
+        return generate(localDirs, dependencyDirs, options, statusCallback, Map.of());
+    }
+
+    public String generate(List<Path> localDirs, List<Path> dependencyDirs, Ips2PlantOptions options,
+                           Consumer<String> statusCallback, Map<Path, String> dependencyModules) {
         statusCallback.accept("Collecting IPS files...");
         var ipsFiles = collector.collect(localDirs);
 
@@ -40,12 +49,8 @@ public class Ips2PlantGenerator {
             statusCallback.accept("Filtering dependency models...");
             var depFiles = collector.collect(dependencyDirs);
             if (ipsFiles.isEmpty()) {
-                // No local files — include all dependency files unfiltered
                 ipsFiles.putAll(depFiles);
             } else {
-                // Transitively resolve referenced types: include dependency types
-                // referenced by local types, then dependency types referenced by
-                // those, and so on until no new types are discovered.
                 var included = new HashMap<String, File>();
                 var referencedTypes = collector.extractReferencedTypes(ipsFiles);
                 while (true) {
@@ -59,7 +64,16 @@ public class Ips2PlantGenerator {
             }
         }
 
-        return generate(ipsFiles, options, statusCallback);
+        Map<String, String> mavenModules = Map.of();
+        if (options.isShowMavenModule()) {
+            var resolver = new MavenModuleResolver();
+            for (var entry : dependencyModules.entrySet()) {
+                resolver.registerModule(entry.getKey(), entry.getValue());
+            }
+            mavenModules = resolver.resolveAll(ipsFiles);
+        }
+
+        return generate(ipsFiles, options, statusCallback, mavenModules);
     }
 
     private Map<String, File> filterByReferencedTypes(Map<String, File> depFiles, Set<String> referencedTypes) {

@@ -17,6 +17,7 @@
     <xsl:param name="connector" select="'--'"/>
     <xsl:param name="dottedConnector" select="'..'"/>
     <xsl:param name="packageFilter"/>
+    <xsl:param name="showMavenModule"/>
 
     <!-- Constants -->
     <xsl:variable name="policySpot">(V,lightSteelBlue)</xsl:variable>

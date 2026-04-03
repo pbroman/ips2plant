@@ -14,6 +14,7 @@ public class Ips2PlantOptions {
     private boolean showEnumTypes;
     private boolean showEnumAssociations;
     private boolean showProductComponents;
+    private boolean showMavenModule;
     private String packageFilter = "";
     private int connectorLength = 2;
 
@@ -34,6 +35,7 @@ public class Ips2PlantOptions {
         if (showEnumTypes) params.put("showEnumTypes", "true");
         if (showEnumAssociations) params.put("showEnumAssociations", "true");
         if (showProductComponents) params.put("showProductComponents", "true");
+        if (showMavenModule) params.put("showMavenModule", "true");
         if (!packageFilter.isBlank()) params.put("packageFilter", packageFilter);
 
         return params;
@@ -65,6 +67,9 @@ public class Ips2PlantOptions {
 
     public boolean isShowProductComponents() { return showProductComponents; }
     public void setShowProductComponents(boolean showProductComponents) { this.showProductComponents = showProductComponents; }
+
+    public boolean isShowMavenModule() { return showMavenModule; }
+    public void setShowMavenModule(boolean showMavenModule) { this.showMavenModule = showMavenModule; }
 
     public String getPackageFilter() { return packageFilter; }
     public void setPackageFilter(String packageFilter) { this.packageFilter = packageFilter; }

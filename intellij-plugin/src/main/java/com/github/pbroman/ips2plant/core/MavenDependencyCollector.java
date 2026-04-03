@@ -36,7 +36,7 @@ public class MavenDependencyCollector {
 
     private final Set<String> resolvedArtifacts = new HashSet<>();
 
-    public record DependencyModel(String artifactId, Path modelDir, Path tempRoot) {}
+    public record DependencyModel(String artifactId, String mavenModule, Path modelDir, Path tempRoot) {}
 
     /**
      * Finds dependency JARs containing IPS model files and extracts them.
@@ -70,12 +70,44 @@ public class MavenDependencyCollector {
             }
             var extracted = extractIpsFilesFromJar(jarPath);
             if (extracted != null) {
-                LOG.info("collectFromDependencies: extracted IPS models from " + artifactId + " -> " + extracted);
-                result.add(new DependencyModel(artifactId, extracted, extracted.getParent()));
+                var mavenModule = extractMavenModule(jarPath);
+                LOG.info("collectFromDependencies: extracted IPS models from " + artifactId + " (" + mavenModule + ") -> " + extracted);
+                result.add(new DependencyModel(artifactId, mavenModule, extracted, extracted.getParent()));
             }
         }
 
         return result;
+    }
+
+    /**
+     * Extracts "groupId:artifactId" from the Maven repository path structure.
+     * Path format: .m2/repository/group/id/path/artifactId/version/artifactId-version.jar
+     */
+    static String extractMavenModule(String jarPath) {
+        var path = Path.of(jarPath).toAbsolutePath().normalize();
+        // version dir -> artifactId dir -> groupId dirs -> "repository"
+        var versionDir = path.getParent();
+        if (versionDir == null) return null;
+        var artifactDir = versionDir.getParent();
+        if (artifactDir == null) return null;
+        var artifactId = artifactDir.getFileName().toString();
+
+        // Walk up to find "repository" directory, collecting groupId segments
+        var groupParts = new ArrayList<String>();
+        var current = artifactDir.getParent();
+        while (current != null && current.getFileName() != null) {
+            var name = current.getFileName().toString();
+            if ("repository".equals(name)) {
+                break;
+            }
+            groupParts.add(0, name);
+            current = current.getParent();
+        }
+
+        if (groupParts.isEmpty()) {
+            return artifactId;
+        }
+        return String.join(".", groupParts) + ":" + artifactId;
     }
 
     static String extractArtifactId(String jarPath) {
