@@ -23,6 +23,7 @@ public class IpsFileCollector {
             ".ipspolicycmpttype",
             ".ipsproductcmpttype",
             ".ipsenumtype",
+            ".ipsenumcontent",
             ".ipstablestructure"
     );
 
@@ -86,6 +87,9 @@ public class IpsFileCollector {
             var className = relativePath
                     .substring(0, relativePath.lastIndexOf('.'))
                     .replace(File.separatorChar, '.');
+            if (file.getName().endsWith(".ipsenumcontent")) {
+                className += "Content";
+            }
             map.put(className, file);
         } else if (file.isDirectory()) {
             for (File child : Objects.requireNonNull(file.listFiles())) {

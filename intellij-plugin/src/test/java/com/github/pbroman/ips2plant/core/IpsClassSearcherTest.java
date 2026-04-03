@@ -169,6 +169,39 @@ class IpsClassSearcherTest {
     }
 
     @Test
+    void search_enumContent_matchedByBaseNamePattern() throws IOException {
+        // given
+        Files.writeString(tempDir.resolve("PrpClauseKind.ipsenumtype"),
+                "<?xml version=\"1.0\"?><EnumType/>");
+        Files.writeString(tempDir.resolve("PrpClauseKind.ipsenumcontent"),
+                "<?xml version=\"1.0\"?><EnumContent/>");
+
+        // when — pattern without "Content" suffix should match both enum type and enum content
+        var result = searcher.search("*clausekind", List.of(tempDir));
+
+        // then
+        assertThat(result).hasSize(2)
+                .containsKeys("PrpClauseKind", "PrpClauseKindContent");
+    }
+
+    @Test
+    void search_enumContent_matchedByContentSuffixPattern() throws IOException {
+        // given
+        Files.writeString(tempDir.resolve("PrpClauseKind.ipsenumtype"),
+                "<?xml version=\"1.0\"?><EnumType/>");
+        Files.writeString(tempDir.resolve("PrpClauseKind.ipsenumcontent"),
+                "<?xml version=\"1.0\"?><EnumContent/>");
+
+        // when — pattern with "Content" suffix should match only the enum content
+        var result = searcher.search("*clausekindcontent", List.of(tempDir));
+
+        // then
+        assertThat(result).hasSize(1)
+                .containsKey("PrpClauseKindContent")
+                .doesNotContainKey("PrpClauseKind");
+    }
+
+    @Test
     void wildcardToRegex_convertsCorrectly() {
         // given / when / then
         assertThat(IpsClassSearcher.wildcardToRegex("*Contract*")).isEqualTo(".*Contract.*");

@@ -17,6 +17,7 @@
     <xsl:param name="connector" select="'--'"/>
     <xsl:param name="dottedConnector" select="'..'"/>
     <xsl:param name="packageFilter"/>
+    <xsl:param name="showEnumContent"/>
     <xsl:param name="showMavenModule"/>
 
     <!-- Constants -->
@@ -48,6 +49,6 @@
     </xsl:template>
 
     <!-- Ignore content-only element types -->
-    <xsl:template match="EnumContent|ProductCmpt|ProductVariant|TableContents"/>
+    <xsl:template match="ProductCmpt|ProductVariant|TableContents"/>
 
 </xsl:stylesheet>

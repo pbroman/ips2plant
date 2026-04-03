@@ -82,6 +82,11 @@ public class Ips2PlantCommand implements Callable<Integer> {
         setTrue("showEnumTypes");
     }
 
+    @Option(names = {"-ec", "--show-enum-content"}, description = "Show enum content (values of extensible enum types)")
+    private void showEnumContent(boolean dummy) {
+        setTrue("showEnumContent");
+    }
+
     @Option(names = {"-ea", "--show-enum-assoc"}, description = "Show enum associations (including external enums)")
     private void showEnumAssociations(boolean dummy) {
         setTrue("showEnumAssociations");

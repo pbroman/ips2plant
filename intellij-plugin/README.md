@@ -40,9 +40,10 @@ The right-click action uses the diagram options configured in the tool window (s
 2. The plugin auto-detects `.ipsproject` files in your project and shows the model directories as a checkbox tree
 3. Select the model directories you want to include
 4. Configure the diagram options as needed
-5. Click **Generate PlantUML**
+5. Click **Generate Model UML** — if no directories are selected, all detected directories are used
 6. The generated `.puml` opens in the editor
-7. The diagram is regenerated when options are changed
+7. The diagram regenerates automatically when options are changed
+8. **Generate Model UML** always clears any active search and generates from model directories
 
 ### Resolve Dependencies
 
@@ -52,7 +53,7 @@ The plugin can include IPS model files from Maven dependency JARs in the diagram
 2. Click **Resolve Dependencies**
 3. The plugin runs `mvn dependency:build-classpath` on the corresponding `pom.xml`, scans the resolved JARs for IPS model files (`model/**/*.ips*`), and extracts them to a temporary directory
 4. The extracted dependency models appear under a **dependencies** node in the tree
-5. Check the dependency models you want to include and click **Generate PlantUML**
+5. Check the dependency models you want to include and click **Generate Model UML**
 
 Only external `de.faktorzehn` group dependencies are resolved — JARs belonging to modules within the current project are automatically excluded. The plugin locates Maven via `MAVEN_HOME`, `M2_HOME`, `PATH`, or common installation directories.
 
@@ -65,7 +66,8 @@ The search panel lets you find specific IPS classes by name and generate a diagr
 3. Matching classes appear as a checkbox list — all are selected by default
 4. A PlantUML diagram is generated automatically for the checked results
 5. Uncheck classes to exclude them and the diagram regenerates accordingly
-6. Clear the search field to dismiss the search results and return to directory-based generation
+6. Use **Select All / Deselect All** to toggle all results at once (appears when 3+ results)
+7. Clear the search field to dismiss the search results and return to directory-based generation
 
 The search searches all selected model directories, including selected dependencies. If no directories are selected, all model directories (local and resolved dependencies) are searched. The search is case-insensitive and matches against the simple class name (not the fully qualified name).
 
@@ -84,10 +86,14 @@ The search searches all selected model directories, including selected dependenc
 | Show tables             | Includes table structures in the diagram                                        |
 | Show table usage        | Shows table usage by product component types                                    |
 | Show enum types         | Includes enum types in the diagram                                              |
+| Show enum content       | Shows enum content (values of extensible enum types)                            |
 | Show enum associations  | Shows enum associations (including external enums)                              |
+| Maven modules           | Shows in which Maven module each class is defined                               |
 | Show product components | Includes product component types in the diagram                                 |
 | Package filter          | Limits the diagram to a specific package and its associations                   |
 | Connector length        | Length of association connectors (default: 2)                                   |
+
+**Select All** toggles all checkboxes at once. **Reset All** unchecks all options, clears the package filter, resets connector length to default, and regenerates the diagram.
 
 ## Attribute Types
 

@@ -32,6 +32,9 @@ public class DefaultIpsFileCollector implements IpsFileCollector {
             var relativePath = root.toPath().relativize(file.toPath()).toString();
             var className = StringUtils.substringBeforeLast(relativePath, ".")
                     .replaceAll(FILE_SEPARATOR_REGEX, ".");
+            if (file.getName().endsWith(".ipsenumcontent")) {
+                className += "Content";
+            }
             map.put(className, file);
 
         } else if (file.listFiles() != null) {

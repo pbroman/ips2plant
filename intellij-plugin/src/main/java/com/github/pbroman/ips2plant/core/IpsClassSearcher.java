@@ -46,6 +46,10 @@ public class IpsClassSearcher {
             var simpleName = fqn.contains(".") ? fqn.substring(fqn.lastIndexOf('.') + 1) : fqn;
             if (pattern.matcher(simpleName).matches()) {
                 result.put(fqn, entry.getValue());
+            } else if (entry.getValue().getName().endsWith(".ipsenumcontent")
+                    && simpleName.endsWith("Content")
+                    && pattern.matcher(simpleName.substring(0, simpleName.length() - "Content".length())).matches()) {
+                result.put(fqn, entry.getValue());
             }
         }
         return result;

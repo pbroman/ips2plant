@@ -12,6 +12,7 @@ public class Ips2PlantOptions {
     private boolean showTables;
     private boolean showTableUsage;
     private boolean showEnumTypes;
+    private boolean showEnumContent;
     private boolean showEnumAssociations;
     private boolean showProductComponents;
     private boolean showMavenModule;
@@ -33,6 +34,7 @@ public class Ips2PlantOptions {
         if (showTables) params.put("showTables", "true");
         if (showTableUsage) params.put("showTableUsage", "true");
         if (showEnumTypes) params.put("showEnumTypes", "true");
+        if (showEnumContent) params.put("showEnumContent", "true");
         if (showEnumAssociations) params.put("showEnumAssociations", "true");
         if (showProductComponents) params.put("showProductComponents", "true");
         if (showMavenModule) params.put("showMavenModule", "true");
@@ -61,6 +63,9 @@ public class Ips2PlantOptions {
 
     public boolean isShowEnumTypes() { return showEnumTypes; }
     public void setShowEnumTypes(boolean showEnumTypes) { this.showEnumTypes = showEnumTypes; }
+
+    public boolean isShowEnumContent() { return showEnumContent; }
+    public void setShowEnumContent(boolean showEnumContent) { this.showEnumContent = showEnumContent; }
 
     public boolean isShowEnumAssociations() { return showEnumAssociations; }
     public void setShowEnumAssociations(boolean showEnumAssociations) { this.showEnumAssociations = showEnumAssociations; }
