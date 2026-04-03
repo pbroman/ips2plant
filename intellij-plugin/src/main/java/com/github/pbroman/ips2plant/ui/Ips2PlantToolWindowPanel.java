@@ -4,7 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -65,19 +64,19 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TITLE_MODEL_DIRECTORIES = "Model Directories";
     private static final String TITLE_OPTIONS = "Options";
     private static final String LABEL_PACKAGES = "Packages";
-    private static final String LABEL_PRINT_TARGET_ROLE = "Print target role";
-    private static final String LABEL_EXTERNAL_SUPERTYPES = "External supertypes";
-    private static final String LABEL_EXTERNAL_ASSOCIATIONS = "External associations";
-    private static final String LABEL_SHOW_TABLE_STRUCTURES = "Show table structures";
-    private static final String LABEL_SHOW_TABLE_USAGE = "Show table usage";
-    private static final String LABEL_SHOW_ENUM_TYPES = "Show enum types";
-    private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Show enum associations";
-    private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Show product components";
+    private static final String LABEL_PRINT_TARGET_ROLE = "Target Roles";
+    private static final String LABEL_EXTERNAL_SUPERTYPES = "External Supertypes";
+    private static final String LABEL_EXTERNAL_ASSOCIATIONS = "External Associations";
+    private static final String LABEL_SHOW_TABLE_STRUCTURES = "Table Structures";
+    private static final String LABEL_SHOW_TABLE_USAGE = "Table Usage";
+    private static final String LABEL_SHOW_ENUM_TYPES = "Enum Types";
+    private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Enum Associations";
+    private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Product Components";
     private static final String LABEL_CLEAR_DEPENDENCIES = "Clear Dependencies";
     private static final String LABEL_RESOLVE_DEPENDENCIES = "Resolve Dependencies";
-    private static final String LABEL_PACKAGE_FILTER = "Package filter:";
-    private static final String LABEL_CONNECTOR_LENGTH = "Connector length:";
-    private static final String LABEL_GENERATE = "Generate PlantUML";
+    private static final String LABEL_PACKAGE_FILTER = "Package Filter:";
+    private static final String LABEL_CONNECTOR_LENGTH = "Connector Length:";
+    private static final String LABEL_GENERATE = "Generate Model UML";
     private static final String LABEL_NO_IPS_PROJECTS = "No .ipsproject files found.";
     private static final String LABEL_DEPENDENCIES = "dependencies";
     private static final String TASK_TITLE = "Generating PlantUML from IPS Models";
@@ -108,9 +107,15 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_ADD_SUPERTYPES = "Transitively add all supertypes (parents, grandparents, etc.) of found classes to the diagram";
     private static final String TOOLTIP_ADD_REFERENCING = "Add all classes that reference found classes through associations";
     private static final String TOOLTIP_SEARCH_RESULTS = "Check/uncheck classes to include in the generated PlantUML diagram";
+    private static final String LABEL_SELECT_ALL_SEARCH = "Select All Results";
+    private static final String LABEL_DESELECT_ALL_SEARCH = "Deselect All Results";
+    private static final String TOOLTIP_SELECT_ALL_SEARCH = "Select or deselect all found classes";
+    private static final int SELECT_ALL_SEARCH_THRESHOLD = 3;
     private static final String TASK_TITLE_SEARCH = "Searching IPS Classes";
 
-    private static final String LABEL_SELECT_ALL_OPTIONS = "Select all";
+    private static final String LABEL_SELECT_ALL_OPTIONS = "Select All";
+    private static final String LABEL_RESET_ALL_OPTIONS = "Reset All";
+    private static final String TOOLTIP_RESET_ALL_OPTIONS = "Deselect all options and reset package filter and connector length";
 
     private final Project project;
 
@@ -131,7 +136,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JPanel searchResultsCardPanel = new JPanel(searchResultsCardLayout);
     private static final String CARD_RESULTS = "results";
     private static final String CARD_NO_RESULTS = "noResults";
+    private final JButton selectAllSearchButton = withTooltip(new JButton(LABEL_SELECT_ALL_SEARCH), TOOLTIP_SELECT_ALL_SEARCH);
     private final Map<String, File> searchResults = new LinkedHashMap<>();
+    private boolean allSearchResultsSelected = true;
 
     // Options
     private final JCheckBox selectAllOptionsCheck = new JCheckBox(LABEL_SELECT_ALL_OPTIONS);
@@ -211,17 +218,27 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         treeScrollPane.setBorder(null);
         modelSection.add(treeScrollPane, BorderLayout.CENTER);
 
-        // Dependency buttons below the tree
+        // Buttons below the tree
+        var generateButton = new JButton(LABEL_GENERATE);
+        generateButton.setToolTipText(TOOLTIP_GENERATE);
+        generateButton.addActionListener(e -> runGeneration());
         var clearDepsButton = new JButton(LABEL_CLEAR_DEPENDENCIES);
         clearDepsButton.setToolTipText(TOOLTIP_CLEAR_DEPENDENCIES);
         clearDepsButton.addActionListener(e -> clearDependencies());
         var resolveButton = new JButton(LABEL_RESOLVE_DEPENDENCIES);
         resolveButton.setToolTipText(TOOLTIP_RESOLVE_DEPENDENCIES);
         resolveButton.addActionListener(e -> resolveDependencies());
-        var dependenciesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        dependenciesPanel.add(resolveButton);
-        dependenciesPanel.add(clearDepsButton);
-        modelSection.add(dependenciesPanel, BorderLayout.SOUTH);
+        var buttonsPanel = new JPanel(new GridBagLayout());
+        var bgbc = new GridBagConstraints();
+        bgbc.insets = new Insets(2, 4, 2, 4);
+        bgbc.fill = GridBagConstraints.HORIZONTAL;
+        bgbc.gridy = 0; bgbc.gridx = 0; bgbc.weightx = 0.5;
+        buttonsPanel.add(resolveButton, bgbc);
+        bgbc.gridx = 1; bgbc.weightx = 0.5;
+        buttonsPanel.add(clearDepsButton, bgbc);
+        bgbc.gridy = 1; bgbc.gridx = 0; bgbc.gridwidth = 1; bgbc.weightx = 0.5;
+        buttonsPanel.add(generateButton, bgbc);
+        modelSection.add(buttonsPanel, BorderLayout.SOUTH);
 
         modelSection.setMinimumSize(new Dimension(0, 80));
 
@@ -248,8 +265,24 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchInputPanel.add(searchButton, BorderLayout.EAST);
         searchSection.add(searchInputPanel, BorderLayout.NORTH);
 
+        // Select/Deselect All button for search results
+        selectAllSearchButton.setVisible(false);
+        selectAllSearchButton.addActionListener(e -> {
+            allSearchResultsSelected = !allSearchResultsSelected;
+            searchResultsList.clear();
+            for (var className : searchResults.keySet()) {
+                searchResultsList.addItem(className, className, allSearchResultsSelected);
+            }
+            selectAllSearchButton.setText(allSearchResultsSelected ? LABEL_DESELECT_ALL_SEARCH : LABEL_SELECT_ALL_SEARCH);
+            if (allSearchResultsSelected) {
+                scheduleRegeneration();
+            }
+        });
+
         searchResultsList.setToolTipText(TOOLTIP_SEARCH_RESULTS);
-        searchResultsList.setCheckBoxListListener((index, value) -> scheduleRegeneration());
+        searchResultsList.setCheckBoxListListener((index, value) -> {
+            scheduleRegeneration();
+        });
         var searchResultsScroll = new JScrollPane(searchResultsList);
         searchResultsScroll.setBorder(null);
         noResultsLabel.setForeground(new Color(200, 0, 0));
@@ -257,6 +290,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchResultsCardPanel.add(searchResultsScroll, CARD_RESULTS);
         searchResultsCardPanel.add(noResultsLabel, CARD_NO_RESULTS);
         searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
+
         searchSection.add(searchResultsCardPanel, BorderLayout.CENTER);
 
         var searchBottomPanel = new JPanel(new GridBagLayout());
@@ -269,13 +303,14 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchBottomPanel.add(addSupertypesCheck, sgbc);
         sgbc.gridx = 1; sgbc.weightx = 0.5;
         searchBottomPanel.add(addReferencingCheck, sgbc);
+        sgbc.gridy = 1; sgbc.gridx = 0; sgbc.gridwidth = 1; sgbc.weightx = 0.5;
+        searchBottomPanel.add(selectAllSearchButton, sgbc);
         searchSection.add(searchBottomPanel, BorderLayout.SOUTH);
 
         searchSection.setMinimumSize(new Dimension(0, 80));
 
         // --- Bottom: Options ---
         var optionsPanel = new JPanel(new GridBagLayout());
-        optionsPanel.setBorder(BorderFactory.createTitledBorder(TITLE_OPTIONS));
         var gbc = new GridBagConstraints();
         gbc.insets = new Insets(2, 4, 2, 4);
         gbc.anchor = GridBagConstraints.WEST;
@@ -296,13 +331,27 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             cb.addActionListener(e -> updateSelectAllState(allOptionChecks));
         }
 
-        gbc.gridy = row++;
-        gbc.gridx = 0; gbc.gridwidth = 2; gbc.weightx = 1.0;
-        optionsPanel.add(selectAllOptionsCheck, gbc);
-        gbc.gridwidth = 1;
+        var resetAllButton = new JButton(LABEL_RESET_ALL_OPTIONS);
+        resetAllButton.setToolTipText(TOOLTIP_RESET_ALL_OPTIONS);
+        resetAllButton.addActionListener(e -> {
+            selectAllOptionsCheck.setSelected(false);
+            for (var cb : allOptionChecks) {
+                cb.setSelected(false);
+            }
+            packageFilterField.setText("");
+            connectorLengthSpinner.setValue(2);
+        });
 
-        JCheckBox[] leftColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showProductCheck };
-        JCheckBox[] rightColumn = { showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumAssocCheck };
+        gbc.gridy = row++;
+        gbc.gridx = 0; gbc.weightx = 0.5;
+        optionsPanel.add(selectAllOptionsCheck, gbc);
+        gbc.gridx = 1; gbc.weightx = 0.5;
+        gbc.fill = GridBagConstraints.NONE;
+        optionsPanel.add(resetAllButton, gbc);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JCheckBox[] leftColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showEnumAssocCheck };
+        JCheckBox[] rightColumn = { showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck };
 
         int maxRows = Math.max(leftColumn.length, rightColumn.length);
         for (int i = 0; i < maxRows; i++) {
@@ -329,22 +378,13 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         gbc.gridx = 1; gbc.weightx = 1.0;
         optionsPanel.add(connectorLengthSpinner, gbc);
 
-        // Wrap options in a wrapper that pushes content to top, then wrap in scroll pane
-        var optionsWrapper = new JPanel(new BorderLayout());
-        optionsWrapper.add(optionsPanel, BorderLayout.NORTH);
-        var optionsScrollPane = new JScrollPane(optionsWrapper);
-        optionsScrollPane.setBorder(null);
-
-        var optionsSection = new JPanel(new BorderLayout());
-        optionsSection.setBorder(BorderFactory.createTitledBorder(TITLE_OPTIONS));
-        optionsSection.add(optionsScrollPane, BorderLayout.CENTER);
-        optionsSection.setMinimumSize(new Dimension(0, 80));
-
-        // Remove the border from the inner optionsPanel since the section has one
-        optionsPanel.setBorder(null);
+        // Wrap options in a scroll pane, pushing content to top
+        var optionsScrollPane = new JScrollPane(optionsPanel);
+        optionsScrollPane.setBorder(BorderFactory.createTitledBorder(TITLE_OPTIONS));
+        optionsScrollPane.setMinimumSize(new Dimension(0, 80));
 
         // --- Split panes: model dirs (top) + search (middle) + options (bottom) ---
-        var bottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchSection, optionsSection);
+        var bottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchSection, optionsScrollPane);
         bottomSplit.setResizeWeight(0.5);
         bottomSplit.setDividerSize(6);
         bottomSplit.setContinuousLayout(true);
@@ -354,14 +394,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         topSplit.setDividerSize(6);
         topSplit.setContinuousLayout(true);
         add(topSplit, BorderLayout.CENTER);
-
-        // --- Bottom: Generate button ---
-        var bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        var generateButton = new JButton(LABEL_GENERATE);
-        generateButton.setToolTipText(TOOLTIP_GENERATE);
-        generateButton.addActionListener(e -> runGeneration());
-        bottomPanel.add(generateButton);
-        add(bottomPanel, BorderLayout.SOUTH);
 
         // --- Auto-regeneration listeners ---
         setupAutoRegeneration(allOptionChecks);
@@ -801,12 +833,16 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchResultsList.clear();
         if (results.isEmpty()) {
             LOG.info("Search returned no results");
+            selectAllSearchButton.setVisible(false);
             searchResultsCardLayout.show(searchResultsCardPanel, CARD_NO_RESULTS);
         } else {
             LOG.info("Search returned " + results.size() + " results");
             for (var className : results.keySet()) {
                 searchResultsList.addItem(className, className, true);
             }
+            allSearchResultsSelected = true;
+            selectAllSearchButton.setText(LABEL_DESELECT_ALL_SEARCH);
+            selectAllSearchButton.setVisible(results.size() >= SELECT_ALL_SEARCH_THRESHOLD);
             autoEnableOptionsForResults(results);
             searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
             // Auto-generate PlantUML for the found classes
@@ -830,6 +866,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private void clearSearchResults() {
         searchResults.clear();
         searchResultsList.clear();
+        selectAllSearchButton.setVisible(false);
         searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
     }
 
