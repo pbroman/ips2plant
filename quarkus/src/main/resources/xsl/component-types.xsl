@@ -5,7 +5,7 @@
     <!-- Policy or Product component types -->
     <xsl:template match="PolicyCmptType|ProductCmptType2">
         <xsl:variable name="componentType" select="name(.)"/>
-        <xsl:if test="$componentType = 'PolicyCmptType' or $showProductComponents">
+        <xsl:if test="($componentType = 'PolicyCmptType' and $showPolicyComponents) or ($componentType = 'ProductCmptType2' and $showProductComponents)">
             <xsl:variable name="classNameWithPackage" select="@className"/>
             <xsl:variable name="className" select="f:class-name(@className)"/>
 

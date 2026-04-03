@@ -23,7 +23,7 @@ public class Ips2PlantCommand implements Callable<Integer> {
 
     private static final int DEFAULT_CONNECTOR_LENGTH = 2;
 
-    private final Map<String, String> xsltParams = new HashMap<>();
+    private final Map<String, String> xsltParams = new HashMap<>(Map.of("showPolicyComponents", "true"));
     private List<Path> modelDirPaths;
     private Path destination;
     private Path workdir;
@@ -90,6 +90,11 @@ public class Ips2PlantCommand implements Callable<Integer> {
     @Option(names = {"-ea", "--show-enum-assoc"}, description = "Show enum associations (including external enums)")
     private void showEnumAssociations(boolean dummy) {
         setTrue("showEnumAssociations");
+    }
+
+    @Option(names = {"-np", "--no-policies"}, description = "Hide policy components")
+    private void noPolicyComponents(boolean dummy) {
+        xsltParams.remove("showPolicyComponents");
     }
 
     @Option(names = {"-pr", "--show-products"}, description = "Show product components")

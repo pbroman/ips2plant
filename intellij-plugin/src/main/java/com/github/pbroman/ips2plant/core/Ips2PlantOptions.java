@@ -14,6 +14,7 @@ public class Ips2PlantOptions {
     private boolean showEnumTypes;
     private boolean showEnumContent;
     private boolean showEnumAssociations;
+    private boolean showPolicyComponents = true;
     private boolean showProductComponents;
     private boolean showMavenModule;
     private String packageFilter = "";
@@ -36,6 +37,7 @@ public class Ips2PlantOptions {
         if (showEnumTypes) params.put("showEnumTypes", "true");
         if (showEnumContent) params.put("showEnumContent", "true");
         if (showEnumAssociations) params.put("showEnumAssociations", "true");
+        if (showPolicyComponents) params.put("showPolicyComponents", "true");
         if (showProductComponents) params.put("showProductComponents", "true");
         if (showMavenModule) params.put("showMavenModule", "true");
         if (!packageFilter.isBlank()) params.put("packageFilter", packageFilter);
@@ -69,6 +71,9 @@ public class Ips2PlantOptions {
 
     public boolean isShowEnumAssociations() { return showEnumAssociations; }
     public void setShowEnumAssociations(boolean showEnumAssociations) { this.showEnumAssociations = showEnumAssociations; }
+
+    public boolean isShowPolicyComponents() { return showPolicyComponents; }
+    public void setShowPolicyComponents(boolean showPolicyComponents) { this.showPolicyComponents = showPolicyComponents; }
 
     public boolean isShowProductComponents() { return showProductComponents; }
     public void setShowProductComponents(boolean showProductComponents) { this.showProductComponents = showProductComponents; }

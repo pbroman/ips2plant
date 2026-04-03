@@ -73,6 +73,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String LABEL_SHOW_ENUM_CONTENT = "Enum Content";
     private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Enum Associations";
     private static final String LABEL_SHOW_MAVEN_MODULE = "Maven Modules";
+    private static final String LABEL_SHOW_POLICY_COMPONENTS = "Policy Components";
     private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Product Components";
     private static final String LABEL_CLEAR_DEPENDENCIES = "Clear Dependencies";
     private static final String LABEL_RESOLVE_DEPENDENCIES = "Resolve Dependencies";
@@ -95,6 +96,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_SHOW_ENUM_CONTENT = "Show enum content (values of extensible enum types)";
     private static final String TOOLTIP_SHOW_ENUM_ASSOCIATIONS = "Show enum associations (including external enums)";
     private static final String TOOLTIP_SHOW_MAVEN_MODULE = "Show the modules where the classes are defined";
+    private static final String TOOLTIP_SHOW_POLICY_COMPONENTS = "Show policy components";
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
     private static final String TOOLTIP_CLEAR_DEPENDENCIES = "Clear all resolved dependencies and remove them from the tree";
     private static final String TOOLTIP_RESOLVE_DEPENDENCIES = "Resolve Maven dependencies of selected modules and show IPS model files from dependency JARs";
@@ -118,8 +120,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TASK_TITLE_SEARCH = "Searching IPS Classes";
 
     private static final String LABEL_SELECT_ALL_OPTIONS = "Select All";
-    private static final String LABEL_RESET_ALL_OPTIONS = "Reset All";
-    private static final String TOOLTIP_RESET_ALL_OPTIONS = "Deselect all options and reset package filter and connector length";
+    private static final String LABEL_RESET_ALL_OPTIONS = "Reset to Default";
+    private static final String TOOLTIP_RESET_ALL_OPTIONS = "Reset all options to their defaults";
 
     private final Project project;
 
@@ -158,6 +160,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox showEnumContentCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_CONTENT), TOOLTIP_SHOW_ENUM_CONTENT);
     private final JCheckBox showEnumAssocCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_ASSOCIATIONS), TOOLTIP_SHOW_ENUM_ASSOCIATIONS);
     private final JCheckBox showMavenModuleCheck = withTooltip(new JCheckBox(LABEL_SHOW_MAVEN_MODULE), TOOLTIP_SHOW_MAVEN_MODULE);
+    private final JCheckBox showPolicyCheck = withTooltip(new JCheckBox(LABEL_SHOW_POLICY_COMPONENTS, true), TOOLTIP_SHOW_POLICY_COMPONENTS);
     private final JCheckBox showProductCheck = withTooltip(new JCheckBox(LABEL_SHOW_PRODUCT_COMPONENTS), TOOLTIP_SHOW_PRODUCT_COMPONENTS);
     private final JTextField packageFilterField = withTooltip(new JTextField(15), TOOLTIP_PACKAGE_FILTER);
     private final JSpinner connectorLengthSpinner = withTooltip(new JSpinner(new SpinnerNumberModel(2, 1, 10, 1)), TOOLTIP_CONNECTOR_LENGTH);
@@ -330,8 +333,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         int row = 0;
 
-        JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showProductCheck,
-                showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck };
+        JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
+                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck };
 
         selectAllOptionsCheck.addActionListener(e -> {
             boolean selected = selectAllOptionsCheck.isSelected();
@@ -350,6 +353,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             for (var cb : allOptionChecks) {
                 cb.setSelected(false);
             }
+            showPolicyCheck.setSelected(true);
             packageFilterField.setText("");
             connectorLengthSpinner.setValue(2);
             scheduleRegeneration();
@@ -363,8 +367,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         optionsPanel.add(resetAllButton, gbc);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JCheckBox[] leftColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showEnumAssocCheck };
-        JCheckBox[] rightColumn = { showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck };
+        JCheckBox[] leftColumn = { showPolicyCheck, showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck };
+        JCheckBox[] rightColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showEnumAssocCheck };
 
         int maxRows = Math.max(leftColumn.length, rightColumn.length);
         for (int i = 0; i < maxRows; i++) {
@@ -1012,6 +1016,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         options.setShowEnumTypes(showEnumTypesCheck.isSelected());
         options.setShowEnumContent(showEnumContentCheck.isSelected());
         options.setShowEnumAssociations(showEnumAssocCheck.isSelected());
+        options.setShowPolicyComponents(showPolicyCheck.isSelected());
         options.setShowProductComponents(showProductCheck.isSelected());
         options.setShowMavenModule(showMavenModuleCheck.isSelected());
         options.setPackageFilter(packageFilterField.getText().trim());

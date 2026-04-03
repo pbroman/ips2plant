@@ -8,6 +8,7 @@
     <xsl:param name="addSuperType"/>
     <xsl:param name="addAssociations"/>
     <xsl:param name="addProductCmptType"/>
+    <xsl:param name="showPolicyComponents"/>
     <xsl:param name="showProductComponents"/>
     <xsl:param name="showTables"/>
     <xsl:param name="showEnumTypes"/>
