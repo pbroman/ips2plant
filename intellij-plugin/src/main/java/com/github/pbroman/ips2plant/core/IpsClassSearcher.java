@@ -23,11 +23,12 @@ public class IpsClassSearcher {
     private final IpsFileCollector collector = new IpsFileCollector();
 
     /**
-     * Search for IPS classes matching a wildcard pattern.
-     * The pattern supports '*' as a wildcard matching any sequence of characters.
-     * Examples: "Contract", "*Contract*", "com.example.*", "*Policy*Type"
+     * Search for IPS classes matching a pattern.
+     * The pattern is interpreted as a regex, with the convenience that bare '*' (not preceded by '.')
+     * is automatically expanded to '.*'. This means both wildcards and full regex are supported.
+     * Examples: "Contract", "*Contract*", "Policy.*Type", "Contract|Policy"
      *
-     * @param searchPattern wildcard pattern
+     * @param searchPattern wildcard/regex pattern
      * @param modelDirs     directories to search in
      * @return map of matching fully qualified class name to file
      */
@@ -135,18 +136,8 @@ public class IpsClassSearcher {
         }
     }
 
-    static String wildcardToRegex(String wildcard) {
-        var sb = new StringBuilder();
-        for (int i = 0; i < wildcard.length(); i++) {
-            char c = wildcard.charAt(i);
-            if (c == '*') {
-                sb.append(".*");
-            } else if (".()[]{}+^$|\\".indexOf(c) >= 0) {
-                sb.append('\\').append(c);
-            } else {
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+    static String wildcardToRegex(String pattern) {
+        // Expand bare '*' (not preceded by '.') to '.*'; everything else is passed through as raw regex
+        return pattern.replaceAll("(?<!\\.)\\*", ".*");
     }
 }

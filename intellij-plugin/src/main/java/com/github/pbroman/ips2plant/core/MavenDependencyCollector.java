@@ -36,6 +36,10 @@ public class MavenDependencyCollector {
 
     private final Set<String> resolvedArtifacts = new HashSet<>();
 
+    public int getResolvedArtifactCount() {
+        return resolvedArtifacts.size();
+    }
+
     public record DependencyModel(String artifactId, String mavenModule, Path modelDir, Path tempRoot) {}
 
     /**

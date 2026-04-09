@@ -61,7 +61,7 @@ Only external `de.faktorzehn` group dependencies are resolved — JARs belonging
 
 The search panel lets you find specific IPS classes by name and generate a diagram for just those classes.
 
-1. Enter a class name pattern in the **Search** field (supports `*` wildcard, e.g. `*Contract*`, `Policy*`, `*Type`)
+1. Enter a class name pattern in the **Search** field (supports `*` wildcard, e.g. `*Contract*`, `Policy*`, `*Type`; and regex, e.g. `Contract|Policy`, `Policy.*Type`)
 2. Press **Enter** or click **Search**
 3. Matching classes appear as a checkbox list — all are selected by default
 4. A PlantUML diagram is generated automatically for the checked results
@@ -69,7 +69,7 @@ The search panel lets you find specific IPS classes by name and generate a diagr
 6. Use **Select All / Deselect All** to toggle all results at once (appears when 3+ results)
 7. Clear the search field to dismiss the search results and return to directory-based generation
 
-The search searches all selected model directories, including selected dependencies. If no directories are selected, all model directories (local and resolved dependencies) are searched. The search is case-insensitive and matches against the simple class name (not the fully qualified name).
+The search searches all selected model directories, including selected dependencies. If no directories are selected, all model directories (local and resolved dependencies) are searched. The search is case-insensitive and matches against the simple class name (not the fully qualified name). The pattern supports `*` as a wildcard (expanded to `.*`) and full Java regex syntax — both can be combined freely.
 
 **Add Supertypes**: Transitively adds all parent classes (supertypes, their supertypes, etc.) of the found classes to the diagram. The added classes are not part of the search results and have no checkboxes — they only appear in the generated PlantUML.
 
