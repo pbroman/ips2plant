@@ -81,6 +81,94 @@
         </xsl:choose>
     </xsl:template>
 
+    <!-- Integer square root (floor), used to compute note wrap width -->
+    <xsl:function name="f:isqrt" as="xs:integer"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="n" as="xs:integer"/>
+        <xsl:sequence select="f:isqrt-step($n, 1)"/>
+    </xsl:function>
+
+    <xsl:function name="f:isqrt-step" as="xs:integer"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="n" as="xs:integer"/>
+        <xsl:param name="x" as="xs:integer"/>
+        <xsl:sequence select="if (($x + 1) * ($x + 1) > $n) then $x else f:isqrt-step($n, $x + 1)"/>
+    </xsl:function>
+
+    <!-- Word-wraps text at the given width, preserving paragraph breaks (blank lines) -->
+    <xsl:function name="f:wrap-text" as="xs:string"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="text" as="xs:string"/>
+        <xsl:param name="width" as="xs:integer"/>
+        <xsl:sequence select="string-join(
+            for $para in tokenize($text, '\n\s*\n')
+            return f:wrap-paragraph(normalize-space($para), $width),
+            '&#xa;&#xa;'
+        )"/>
+    </xsl:function>
+
+    <xsl:function name="f:wrap-paragraph" as="xs:string"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="para" as="xs:string"/>
+        <xsl:param name="width" as="xs:integer"/>
+        <xsl:sequence select="f:wrap-words(tokenize($para, '\s+'), $width, '', '')"/>
+    </xsl:function>
+
+    <xsl:function name="f:wrap-words" as="xs:string"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="words" as="xs:string*"/>
+        <xsl:param name="width" as="xs:integer"/>
+        <xsl:param name="line" as="xs:string"/>
+        <xsl:param name="result" as="xs:string"/>
+        <xsl:choose>
+            <xsl:when test="empty($words)">
+                <xsl:sequence select="
+                    if ($line != '') then
+                        if ($result != '') then concat($result, '&#xa;', $line) else $line
+                    else $result
+                "/>
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:variable name="word" select="$words[1]"/>
+                <xsl:variable name="candidate" select="if ($line = '') then $word else concat($line, ' ', $word)"/>
+                <xsl:choose>
+                    <xsl:when test="string-length($candidate) &lt;= $width or $line = ''">
+                        <xsl:sequence select="f:wrap-words(subsequence($words, 2), $width, $candidate, $result)"/>
+                    </xsl:when>
+                    <xsl:otherwise>
+                        <xsl:variable name="newResult" select="if ($result != '') then concat($result, '&#xa;', $line) else $line"/>
+                        <xsl:sequence select="f:wrap-words(subsequence($words, 2), $width, $word, $newResult)"/>
+                    </xsl:otherwise>
+                </xsl:choose>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:function>
+
+    <!-- Renders a class description as a PlantUML note left of the class, word-wrapped to a roughly square shape -->
+    <xsl:template name="class-description-note">
+        <xsl:param name="className"/>
+        <xsl:param name="description"/>
+        <xsl:if test="$showDescriptions = 'true' and normalize-space($description) != ''">
+            <xsl:variable name="width" select="max((35, f:isqrt(string-length($description) * 2)))"
+                          xmlns:xs="http://www.w3.org/2001/XMLSchema"/>
+            <xsl:value-of select="concat('note left of ', $className, '&#xa;')"/>
+            <xsl:value-of select="f:wrap-text($description, $width)"/>
+            <xsl:text>&#xa;end note&#xa;</xsl:text>
+        </xsl:if>
+    </xsl:template>
+
+    <!-- Renders an attribute description as a PlantUML note right of the attribute -->
+    <xsl:template name="attribute-description-note">
+        <xsl:param name="className"/>
+        <xsl:param name="attrName"/>
+        <xsl:param name="description"/>
+        <xsl:if test="$showDescriptions = 'true' and normalize-space($description) != ''">
+            <xsl:value-of select="concat('note right of ', $className, '::', $attrName, '&#xa;')"/>
+            <xsl:value-of select="$description"/>
+            <xsl:text>&#xa;end note&#xa;</xsl:text>
+        </xsl:if>
+    </xsl:template>
+
     <!-- Renders the target role label if enabled -->
     <xsl:template name="target-role-label">
         <xsl:if test="@targetRoleSingular and $printTargetRole = 'true'">

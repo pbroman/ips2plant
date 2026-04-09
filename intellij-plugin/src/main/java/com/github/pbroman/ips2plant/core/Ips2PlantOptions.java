@@ -17,6 +17,8 @@ public class Ips2PlantOptions {
     private boolean showPolicyComponents = true;
     private boolean showProductComponents;
     private boolean showMavenModule;
+    private boolean showDescriptions;
+    private String descriptionLocale = "en";
     private String packageFilter = "";
     private int connectorLength = 2;
 
@@ -40,6 +42,8 @@ public class Ips2PlantOptions {
         if (showPolicyComponents) params.put("showPolicyComponents", "true");
         if (showProductComponents) params.put("showProductComponents", "true");
         if (showMavenModule) params.put("showMavenModule", "true");
+        if (showDescriptions) params.put("showDescriptions", "true");
+        params.put("descriptionLocale", descriptionLocale);
         if (!packageFilter.isBlank()) params.put("packageFilter", packageFilter);
 
         return params;
@@ -80,6 +84,12 @@ public class Ips2PlantOptions {
 
     public boolean isShowMavenModule() { return showMavenModule; }
     public void setShowMavenModule(boolean showMavenModule) { this.showMavenModule = showMavenModule; }
+
+    public boolean isShowDescriptions() { return showDescriptions; }
+    public void setShowDescriptions(boolean showDescriptions) { this.showDescriptions = showDescriptions; }
+
+    public String getDescriptionLocale() { return descriptionLocale; }
+    public void setDescriptionLocale(String descriptionLocale) { this.descriptionLocale = descriptionLocale; }
 
     public String getPackageFilter() { return packageFilter; }
     public void setPackageFilter(String packageFilter) { this.packageFilter = packageFilter; }

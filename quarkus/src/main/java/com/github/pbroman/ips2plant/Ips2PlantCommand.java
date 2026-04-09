@@ -112,6 +112,16 @@ public class Ips2PlantCommand implements Callable<Integer> {
         setTrue("showMavenModule");
     }
 
+    @Option(names = {"-d", "--descriptions"}, description = "Show descriptions as PlantUML notes")
+    private void showDescriptions(boolean dummy) {
+        setTrue("showDescriptions");
+    }
+
+    @Option(names = {"--description-locale"}, description = "Locale for descriptions (default: en)")
+    private void setDescriptionLocale(String locale) {
+        xsltParams.put("descriptionLocale", locale);
+    }
+
     private void setTrue(String param) {
         xsltParams.put(param, "true");
     }

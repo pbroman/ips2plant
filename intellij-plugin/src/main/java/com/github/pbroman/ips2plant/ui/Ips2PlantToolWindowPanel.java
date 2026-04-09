@@ -77,6 +77,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String LABEL_SHOW_ENUM_CONTENT = "Enum Content";
     private static final String LABEL_SHOW_ENUM_ASSOCIATIONS = "Enum Associations";
     private static final String LABEL_SHOW_MAVEN_MODULE = "Maven Modules";
+    private static final String LABEL_SHOW_DESCRIPTIONS = "Descriptions";
     private static final String LABEL_SHOW_POLICY_COMPONENTS = "Policy Components";
     private static final String LABEL_SHOW_PRODUCT_COMPONENTS = "Product Components";
     private static final String LABEL_CLEAR_DEPENDENCIES = "Clear Dependencies";
@@ -100,6 +101,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_SHOW_ENUM_CONTENT = "Show enum content (values of extensible enum types)";
     private static final String TOOLTIP_SHOW_ENUM_ASSOCIATIONS = "Show enum associations (including external enums)";
     private static final String TOOLTIP_SHOW_MAVEN_MODULE = "Show the modules where the classes are defined";
+    private static final String TOOLTIP_SHOW_DESCRIPTIONS = "Show Description texts as PlantUML notes";
     private static final String TOOLTIP_SHOW_POLICY_COMPONENTS = "Show policy components";
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
     private static final String TOOLTIP_CLEAR_DEPENDENCIES = "Clear all resolved dependencies and remove them from the tree";
@@ -169,6 +171,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox showEnumContentCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_CONTENT), TOOLTIP_SHOW_ENUM_CONTENT);
     private final JCheckBox showEnumAssocCheck = withTooltip(new JCheckBox(LABEL_SHOW_ENUM_ASSOCIATIONS), TOOLTIP_SHOW_ENUM_ASSOCIATIONS);
     private final JCheckBox showMavenModuleCheck = withTooltip(new JCheckBox(LABEL_SHOW_MAVEN_MODULE), TOOLTIP_SHOW_MAVEN_MODULE);
+    private final JCheckBox showDescriptionsCheck = withTooltip(new JCheckBox(LABEL_SHOW_DESCRIPTIONS), TOOLTIP_SHOW_DESCRIPTIONS);
     private final JCheckBox showPolicyCheck = withTooltip(new JCheckBox(LABEL_SHOW_POLICY_COMPONENTS, true), TOOLTIP_SHOW_POLICY_COMPONENTS);
     private final JCheckBox showProductCheck = withTooltip(new JCheckBox(LABEL_SHOW_PRODUCT_COMPONENTS), TOOLTIP_SHOW_PRODUCT_COMPONENTS);
     private final JTextField packageFilterField = withTooltip(new JTextField(15), TOOLTIP_PACKAGE_FILTER);
@@ -351,7 +354,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         int row = 0;
 
         JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
-                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck };
+                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck, showDescriptionsCheck };
 
         selectAllOptionsCheck.addActionListener(e -> {
             boolean selected = selectAllOptionsCheck.isSelected();
@@ -379,7 +382,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JCheckBox[] leftColumn = { showPolicyCheck, showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck };
-        JCheckBox[] rightColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showEnumAssocCheck };
+        JCheckBox[] rightColumn = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showEnumAssocCheck, showDescriptionsCheck };
 
         int maxRows = Math.max(leftColumn.length, rightColumn.length);
         for (int i = 0; i < maxRows; i++) {
@@ -965,7 +968,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         addReferencingCheck.setSelected(false);
         // Reset options (need the allOptionChecks array — rebuild it here)
         JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
-                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck };
+                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck, showDescriptionsCheck };
         resetOptions(allOptionChecks);
         // Open empty diagram
         GeneratePlantUmlAction.openInEditor(project, EMPTY_PUML);
@@ -1111,6 +1114,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         options.setShowPolicyComponents(showPolicyCheck.isSelected());
         options.setShowProductComponents(showProductCheck.isSelected());
         options.setShowMavenModule(showMavenModuleCheck.isSelected());
+        options.setShowDescriptions(showDescriptionsCheck.isSelected());
         options.setPackageFilter(packageFilterField.getText().trim());
         options.setConnectorLength((int) connectorLengthSpinner.getValue());
         return options;

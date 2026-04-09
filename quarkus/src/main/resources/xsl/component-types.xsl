@@ -53,6 +53,21 @@
                     <xsl:value-of select="concat('  ', $attrType, @name, ': ', @datatype, '&#xa;')"/>
                 </xsl:for-each>
                 <xsl:text>}&#xa;</xsl:text>
+
+                <!-- Description notes -->
+                <xsl:call-template name="class-description-note">
+                    <xsl:with-param name="className" select="$className"/>
+                    <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                </xsl:call-template>
+                <xsl:for-each select="Attribute">
+                    <xsl:sort select="@name"/>
+                    <xsl:call-template name="attribute-description-note">
+                        <xsl:with-param name="className" select="$className"/>
+                        <xsl:with-param name="attrName" select="@name"/>
+                        <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                    </xsl:call-template>
+                </xsl:for-each>
+
                 <xsl:for-each select="Attribute">
                     <xsl:call-template name="enum-association">
                         <xsl:with-param name="enumType" select="@datatype" />
