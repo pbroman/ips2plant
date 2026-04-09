@@ -51,13 +51,13 @@
                 <!-- Description notes -->
                 <xsl:call-template name="class-description-note">
                     <xsl:with-param name="className" select="$className"/>
-                    <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                    <xsl:with-param name="description" select="(Description[@locale=$descriptionLocale], Description[@locale='de'])[1]"/>
                 </xsl:call-template>
                 <xsl:for-each select="EnumAttribute">
                     <xsl:call-template name="attribute-description-note">
                         <xsl:with-param name="className" select="$className"/>
                         <xsl:with-param name="attrName" select="@name"/>
-                        <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                        <xsl:with-param name="description" select="(Description[@locale=$descriptionLocale], Description[@locale='de'])[1]"/>
                     </xsl:call-template>
                 </xsl:for-each>
 
@@ -122,8 +122,7 @@
                         </xsl:if>
                         <xsl:choose>
                             <xsl:when test="InternationalString">
-                                <xsl:variable name="defaultLocale" select="InternationalString/@defaultLocale"/>
-                                <xsl:value-of select="InternationalString/LocalizedString[@locale=$defaultLocale]/@text"/>
+                                <xsl:value-of select="(InternationalString/LocalizedString[@locale=$descriptionLocale], InternationalString/LocalizedString[@locale='de'])[1]/@text"/>
                             </xsl:when>
                             <xsl:when test="@isNull = 'true'">
                                 <xsl:text>null</xsl:text>

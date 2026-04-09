@@ -57,14 +57,14 @@
                 <!-- Description notes -->
                 <xsl:call-template name="class-description-note">
                     <xsl:with-param name="className" select="$className"/>
-                    <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                    <xsl:with-param name="description" select="(Description[@locale=$descriptionLocale], Description[@locale='de'])[1]"/>
                 </xsl:call-template>
                 <xsl:for-each select="Attribute">
                     <xsl:sort select="@name"/>
                     <xsl:call-template name="attribute-description-note">
                         <xsl:with-param name="className" select="$className"/>
                         <xsl:with-param name="attrName" select="@name"/>
-                        <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
+                        <xsl:with-param name="description" select="(Description[@locale=$descriptionLocale], Description[@locale='de'])[1]"/>
                     </xsl:call-template>
                 </xsl:for-each>
 

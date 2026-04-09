@@ -1115,6 +1115,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         options.setShowProductComponents(showProductCheck.isSelected());
         options.setShowMavenModule(showMavenModuleCheck.isSelected());
         options.setShowDescriptions(showDescriptionsCheck.isSelected());
+        options.setDescriptionLocale(com.github.pbroman.ips2plant.settings.Ips2PlantSettings.getInstance().locale);
         options.setPackageFilter(packageFilterField.getText().trim());
         options.setConnectorLength((int) connectorLengthSpinner.getValue());
         return options;

@@ -117,8 +117,8 @@ public class Ips2PlantCommand implements Callable<Integer> {
         setTrue("showDescriptions");
     }
 
-    @Option(names = {"--description-locale"}, description = "Locale for descriptions (default: en)")
-    private void setDescriptionLocale(String locale) {
+    @Option(names = {"-c", "--locale"}, description = "Locale for descriptions and enum content (default: de, falls back to de if not found)")
+    private void setLocale(String locale) {
         xsltParams.put("descriptionLocale", locale);
     }
 

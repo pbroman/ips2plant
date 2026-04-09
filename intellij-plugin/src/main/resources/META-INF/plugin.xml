@@ -15,6 +15,11 @@
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">
+        <applicationService serviceImplementation="com.github.pbroman.ips2plant.settings.Ips2PlantSettings"/>
+        <applicationConfigurable parentId="tools"
+                                 instance="com.github.pbroman.ips2plant.settings.Ips2PlantConfigurable"
+                                 id="com.github.pbroman.ips2plant.settings.Ips2PlantConfigurable"
+                                 displayName="IPS to PlantUML"/>
         <toolWindow id="IPS to PlantUML"
                     factoryClass="com.github.pbroman.ips2plant.ui.Ips2PlantToolWindowFactory"
                     anchor="right"

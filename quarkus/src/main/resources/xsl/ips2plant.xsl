@@ -21,7 +21,7 @@
     <xsl:param name="showEnumContent"/>
     <xsl:param name="showMavenModule"/>
     <xsl:param name="showDescriptions"/>
-    <xsl:param name="descriptionLocale" select="'en'"/>
+    <xsl:param name="descriptionLocale" select="'de'"/>
 
     <!-- Constants -->
     <xsl:variable name="policySpot">(V,lightSteelBlue)</xsl:variable>

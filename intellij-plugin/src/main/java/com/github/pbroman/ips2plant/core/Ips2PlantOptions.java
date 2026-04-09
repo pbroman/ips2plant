@@ -18,7 +18,7 @@ public class Ips2PlantOptions {
     private boolean showProductComponents;
     private boolean showMavenModule;
     private boolean showDescriptions;
-    private String descriptionLocale = "en";
+    private String descriptionLocale = "de";
     private String packageFilter = "";
     private int connectorLength = 2;
 
