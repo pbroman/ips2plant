@@ -1,72 +1,115 @@
-# Plant UML Diagrams from Faktor-IPS Model Classes
+# IPS to PlantUML
 
-A bash script using XSL to create plantUml class diagrams from [Faktor-IPS](https://github.com/faktorips) model classes.
+Generates [PlantUML](https://plantuml.com/) class diagrams from [Faktor-IPS](https://github.com/faktorips) model files.
 
-## Java Version
+Three implementations are available:
 
-There is now a java implementation available, so that you don't have to use Linux/WSL/Docker and xsltproc. 
-(But you still can, if you want to. The bash version is faster ...). 
+| Implementation | Status | Description |
+|---|---|---|
+| **IntelliJ Plugin** (`intellij-plugin/`) | Active | IDE tool window + right-click action |
+| **Quarkus CLI** (`quarkus/`) | Active | Java CLI, no extra tooling required |
+| **Bash script** (`ips2plant.sh`) | Legacy | Requires `xsltproc` (Linux/WSL/Docker) |
 
-### Notes
-* For multiple model paths, please use the -p flag for each path (e.g. '-p some/path -p another/path ...')  
+---
+
+## IntelliJ Plugin
+
+See [`intellij-plugin/README.md`](intellij-plugin/README.md) for full documentation.
+
+---
+
+## Quarkus CLI
+
+### Build & Run
+
+```bash
+./build-quarkus.sh          # builds quarkus/target/ips2plant-cli-runner.jar
+./run-quarkus.sh [flags]    # runs the built jar
+```
 
 ### Usage
-See `./jips2plant.sh -h`
 
-## Bash/Linux Version
+```
+./run-quarkus.sh -p <model-dir> [options] -o output.puml
+```
+
+For multiple model directories repeat `-p`:
+
+```bash
+./run-quarkus.sh -p path/to/im/domain/model -p path/to/ipm/business/model -o output.puml
+```
+
+### Options
+
+| Flag | Long form | Description |
+|------|-----------|-------------|
+| `-p` | `--paths` | Path(s) to model directories (repeat for multiple) |
+| `-o` | `--output` | Output file path (`.puml`) |
+| `-w` | `--workdir` | Working directory for intermediate `collection.xml` |
+| `-k` | `--packages` | Group classes into their packages |
+| `-r` | `--print-target-role` | Print `targetRolePlural` on composition arrows |
+| `-s` | `--add-super-type` | Add supertypes not present in the scanned models |
+| `-a` | `--add-associations` | Add associations to classes not in the scanned models |
+| `-pr` | `--show-products` | Show product component types |
+| `-np` | `--no-policies` | Hide policy component types |
+| `-t` | `--show-tables` | Show table structures |
+| `-tu` | `--show-table-usage` | Show table usage by product component types |
+| `-et` | `--show-enum-types` | Show enum types |
+| `-ec` | `--show-enum-content` | Show enum content (values of extensible enum types) |
+| `-ea` | `--show-enum-assoc` | Show enum associations (including external enums) |
+| `-m` | `--maven` | Show Maven module for each class |
+| `-d` | `--descriptions` | Show description texts as PlantUML notes |
+| `-c` | `--locale` | Language for descriptions and enum content (default: `de`) |
+| `-pf` | `--package-filter` | Limit diagram to a specific package and its associations |
+| `-l` | `--connector-length` | Length of association connectors (default: 2) |
+
+### Example
+
+```bash
+./run-quarkus.sh \
+  -p path/to/im/domain/model \
+  -p path/to/ipm/business/model \
+  -k -r -s -pr -t -tu -et \
+  -o output/diagram.puml
+```
+
+---
+
+## Bash / Linux Version (Legacy)
+
+> **Not actively developed.** Requires `xsltproc` on Linux/WSL, or Docker.
 
 ### Prerequisites
-* You are using Linux, Mac, or WSL with xsltproc installed 
-* OR you have docker installed
-* You know where to find your Faktor-IPS model classes :)
 
-### Using in Docker
-* Build the Dockerfile:  `docker build . -t alpine-ips2plant`
-* In Windows: use the batch script `ips2plantDocker.bat`
-* **Please observe:** since the path to your IPS repository must be mounted as well as the scripts, the `ips2plantDocker.bat` script requires that you add the repository path as the first argument and use `/repos/` as prefix for your paths, e.g. `ips2plantDocker.bat C:\Users\me\whatever -p "/repos/im/domain/model ..."`
+* Linux, macOS, or WSL with `xsltproc` installed, **or** Docker
+
+### Using with Docker
+
+```bash
+docker build . -t alpine-ips2plant
+# Windows:
+ips2plantDocker.bat <path-to-repos> [options]
+# Prefix paths with /repos/ inside the container:
+ips2plantDocker.bat C:\Users\me\repos -p "/repos/im/domain/model"
+```
 
 ### Usage
-See `./ips2plant.sh -h` or `.\ips2plantDocker.bat <repos_path> -h`
+
+```
+./ips2plant.sh --help
+```
+
+---
 
 ## Attribute Types
-Attribute visibility markers are misused for Faktor-IPS attribute types:
+
+Attribute visibility markers represent Faktor-IPS attribute types:
+
+| Marker | Attribute Type |
+|--------|----------------|
+| `+`    | changeable     |
+| `~`    | derived        |
+| `#`    | computed       |
+| `-`    | constant       |
 
 ![Attribute Type Legend](docu/attr_type_legend.png)
-
-## Example
-Let's say you have Faktor-IPS model classes in `<path_to_repos>/im/domain/model` and `<path_to_repos>/ipm/business/model`.
-The first thing you may do, is to execute `./ips2plant.sh -o output/my-test.puml -p "<path_to_repos>/im/domain/model <path_to_repos>/ipm/business/model"`. 
-This will copy all the model files to the working directory, put them in an XML file, and execute the XSL transformation to create the plantUml. 
-
-Once you have created the XML with all the classes, you can omit the path argument and try different options for the created class diagram. You can for instance use `-r -s -a -k` for adding role names on associations, external supertypes, external associations, and packaging. 
-
-Adding `-et -ea -pr -t -tu` gives you enum types and associations, product types, table structures, and table usage. And `-pf <my_package>` limits the view to a certain package. Play around with it and have fun. :)
-
-It might be helpful to have a wrapper script for diagrams you wish to build repeatedly, e.g.:
-```
-#!/usr/bin/env bash
-
-IPS_2_PLANT="<path to>/ips2plant.sh"
-RESULT="<wherever you want>"
-WORKDIR="$RESULT/workdir"
-OUTPUT="$RESULT/output"
-VM_PATH="<path to>/vm"
-
-BASIS="$VM_PATH/vm.basis/basis/domain/modell"
-SHU_BASIS="$VM_PATH/vm.basis/shu/domain/modell"
-SHU_ERW="$VM_PATH/vm.shu.privat/shu-erw/domain/modell"
-HAUSRAT="$VM_PATH/vm.shu.privat/hausrat/domain/modell"
-
-mkdir -p $OUTPUT
-
-$IPS_2_PLANT -w $WORKDIR -dw -p "$BASIS" -o $OUTPUT/basis_plain.puml -l 3
-$IPS_2_PLANT -w $WORKDIR -o $OUTPUT/basis_packages.puml -k -l 3
-$IPS_2_PLANT -w $WORKDIR -o $OUTPUT/basis_complete.puml -k -r -s -pr -t -tu -et -l 3
-
-$IPS_2_PLANT -w $WORKDIR -o $OUTPUT/basis_versicherung.puml -k -r -s -pr -t -tu -et -l 3 -pf versich -a -ea
-
-$IPS_2_PLANT -w $WORKDIR -dw -p "$BASIS $SHU_BASIS $SHU_ERW $HAUSRAT" -o $OUTPUT/hausrat_plain.puml -l 3
-$IPS_2_PLANT -w $WORKDIR -o $OUTPUT/hausrat_steuer.puml -k -r -s -pr -t -tu -et -l 3 -pf steuer -a -ea
-$IPS_2_PLANT -w $WORKDIR -o $OUTPUT/hausrat_zuna.puml -k -r -s -pr -t -tu -et -l 3 -pf zuna -a -ea
-...
-```

@@ -9,6 +9,7 @@ An IntelliJ IDEA plugin that generates [PlantUML](https://plantuml.com/) class d
 | `.ipspolicycmpttype`       | Policy component types   |
 | `.ipsproductcmpttype`      | Product component types  |
 | `.ipsenumtype`             | Enum types               |
+| `.ipsenumcontent`          | Enum content (values)    |
 | `.ipstablestructure`       | Table structures         |
 
 ## Installation
@@ -39,7 +40,7 @@ The right-click action uses the diagram options configured in the tool window (s
 1. Open the **IPS to PlantUML** tool window (right panel)
 2. The plugin auto-detects `.ipsproject` files in your project and shows the model directories as a checkbox tree
 3. Select the model directories you want to include
-4. Click **Generate Model UML** — if no directories are selected, all detected directories are used
+4. Click **Generate Model UML** — if no directories are selected, all detected directories are used (configurable in Settings)
 5. The generated `.puml` opens in the editor
 6. Configure the diagram options as needed. The diagram regenerates automatically when options are changed
 7. **Generate Model UML** always clears any active search and generates from model directories
@@ -76,23 +77,40 @@ The search searches all selected model directories, including selected dependenc
 
 ### Diagram Options
 
-| Option                  | Description                                                                     |
-|-------------------------|---------------------------------------------------------------------------------|
-| Packages                | Groups classes into their packages                                              |
-| Print target role       | Shows the `targetRolePlural` on composition arrows                              |
-| External supertypes     | Adds inheritance of super types in dependencies or not in the selected packages |
-| External associations   | Adds associations to classes not in the selected packages                       |
-| Show tables             | Includes table structures in the diagram                                        |
-| Show table usage        | Shows table usage by product component types                                    |
-| Show enum types         | Includes enum types in the diagram                                              |
-| Show enum content       | Shows enum content (values of extensible enum types)                            |
-| Show enum associations  | Shows enum associations (including external enums)                              |
-| Maven modules           | Shows in which Maven module each class is defined                               |
-| Show product components | Includes product component types in the diagram                                 |
-| Package filter          | Limits the diagram to a specific package and its associations                   |
-| Connector length        | Length of association connectors (default: 2)                                   |
+| Option                  | Default | Description                                                                     |
+|-------------------------|---------|---------------------------------------------------------------------------------|
+| Policy Components       | ✓       | Includes policy component types in the diagram                                  |
+| Product Components      |         | Includes product component types in the diagram                                 |
+| Table Structures        |         | Includes table structures in the diagram                                        |
+| Table Usage             |         | Shows table usage by product component types                                    |
+| Enum Types              |         | Includes enum types in the diagram                                              |
+| Enum Content            |         | Shows content values of extensible enum types                                   |
+| Packages                |         | Groups classes into their packages                                              |
+| Target Roles            |         | Shows the `targetRolePlural` on composition arrows                              |
+| External Supertypes     |         | Adds inheritance of supertypes not in the selected packages                     |
+| External Associations   |         | Adds associations to classes not in the selected packages                       |
+| Maven Modules           |         | Shows in which Maven module each class is defined                               |
+| Enum Associations       |         | Shows enum associations (including external enums)                              |
+| Descriptions            |         | Shows IPS description texts as PlantUML notes (language set in Settings)        |
+| Package Filter          |         | Limits the diagram to a specific package and its associations                   |
+| Connector Length        | 2       | Length of association connectors                                                |
 
-**Select All** toggles all checkboxes at once. **Reset All** unchecks all options, clears the package filter, resets connector length to default, and regenerates the diagram.
+**Select All** enables all option checkboxes at once (by default, Descriptions is excluded from Select All — see Settings). **Select None** turns them off. **Reset to Default** reverts the options to their initial state (Policy Components on, all others off, package filter cleared, connector length 2). **Reset All** unchecks all model directories, clears the search, resets all options to default, and clears the diagram.
+
+### Settings
+
+Open **Settings > Tools > IPS to PlantUML** to configure plugin behaviour.
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Locale  | `de`    | Language used for description texts and enum content labels |
+| Model generation falls back on all directories when none selected | ✓ | When no directories are checked, **Generate Model UML** uses all detected directories |
+| Model generation resets the options to default (showing only Policy Components) | | When **Generate Model UML** is clicked, all options are reset first |
+| Search falls back on all directories when none selected | ✓ | When no directories are checked, the search runs across all directories |
+| Search selects all class types found | ✓ | After a successful search, **Policy Components** / **Product Components** / etc. are automatically enabled for every class type present in the results |
+| Search resets all options (other than class types found, when selected) | | When a search completes, all options (except those auto-enabled by the previous setting) are reset first |
+| Selecting / deselecting model directories retriggers model generation / search | | Checking or unchecking a directory in the tree immediately regenerates the current diagram or search |
+| Options Select All ignores Descriptions | ✓ | Clicking **Select All** does not enable the **Descriptions** option; deselecting still clears it |
 
 ## Attribute Types
 
@@ -113,6 +131,7 @@ As shown in generated plantUml:
 
 * If you have the [PlantUML Integration](https://plugins.jetbrains.com/plugin/7017-plantuml-integration) plugin installed, the generated diagram will render automatically when opened.
 * You can select multiple directories at once, e.g. a base model and a product-specific model, to get a combined diagram.
+* To include descriptions in the diagram, check **Descriptions** in the options and set the desired language in **Settings > Tools > IPS to PlantUML**.
 
 ## Building from Source
 
