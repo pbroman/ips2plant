@@ -44,6 +44,7 @@ import com.github.pbroman.ips2plant.core.IpsClassSearcher;
 import com.github.pbroman.ips2plant.core.IpsProjectDetector;
 import com.github.pbroman.ips2plant.core.MavenDependencyCollector;
 import com.github.pbroman.ips2plant.core.MavenDependencyCollector.DependencyModel;
+import com.github.pbroman.ips2plant.settings.Ips2PlantSettings;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.progress.ProgressIndicator;
@@ -176,6 +177,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox showProductCheck = withTooltip(new JCheckBox(LABEL_SHOW_PRODUCT_COMPONENTS), TOOLTIP_SHOW_PRODUCT_COMPONENTS);
     private final JTextField packageFilterField = withTooltip(new JTextField(15), TOOLTIP_PACKAGE_FILTER);
     private final JSpinner connectorLengthSpinner = withTooltip(new JSpinner(new SpinnerNumberModel(2, 1, 10, 1)), TOOLTIP_CONNECTOR_LENGTH);
+    private JCheckBox[] allOptionChecks;
 
     private static <T extends javax.swing.JComponent> T withTooltip(T component, String tooltip) {
         component.setToolTipText(tooltip);
@@ -234,6 +236,13 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                 } finally {
                     propagating = false;
                 }
+                if (Ips2PlantSettings.getInstance().retriggerOnDirChange) {
+                    if (generationState.isSearchActive()) {
+                        runSearch();
+                    } else {
+                        scheduleRegeneration();
+                    }
+                }
             }
         });
 
@@ -247,6 +256,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         generateButton.addActionListener(e -> {
             searchField.setText("");
             clearSearchResults();
+            if (Ips2PlantSettings.getInstance().generateResetsOptions) {
+                resetOptions(allOptionChecks);
+            }
             generationState.activateModelGeneration();
             runGeneration();
         });
@@ -353,12 +365,16 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         int row = 0;
 
-        JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
+        allOptionChecks = new JCheckBox[]{ packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
                 showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck, showDescriptionsCheck };
 
         selectAllOptionsCheck.addActionListener(e -> {
             boolean selected = selectAllOptionsCheck.isSelected();
             for (var cb : allOptionChecks) {
+                if (selected && cb == showDescriptionsCheck
+                        && Ips2PlantSettings.getInstance().selectAllIgnoresDescriptions) {
+                    continue;
+                }
                 cb.setSelected(selected);
             }
         });
@@ -877,7 +893,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         var selectedLocal = getSelectedLocalDirs();
         var selectedDeps = getSelectedDependencyDirs();
         var searchDirs = new ArrayList<Path>();
-        if (selectedLocal.isEmpty() && selectedDeps.isEmpty()) {
+        boolean noneSelected = selectedLocal.isEmpty() && selectedDeps.isEmpty();
+        boolean useAllDirs = noneSelected && Ips2PlantSettings.getInstance().searchFallbackToAll;
+        if (useAllDirs) {
             searchDirs.addAll(getAllLocalModelDirs());
             searchDirs.addAll(getAllDependencyDirs());
         } else {
@@ -915,7 +933,15 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             allSearchResultsSelected = true;
             selectAllSearchButton.setText(LABEL_DESELECT_ALL_SEARCH);
             selectAllSearchButton.setVisible(results.size() >= SELECT_ALL_SEARCH_THRESHOLD);
-            autoEnableOptionsForResults(results);
+            var settings = Ips2PlantSettings.getInstance();
+            if (settings.searchResetsOptions) {
+                resetOptions(allOptionChecks);
+                addSupertypesCheck.setSelected(false);
+                addReferencingCheck.setSelected(false);
+            }
+            if (settings.searchSelectsAllClassTypes) {
+                autoEnableOptionsForResults(results);
+            }
             searchResultsCardLayout.show(searchResultsCardPanel, CARD_RESULTS);
             // Auto-generate PlantUML for the found classes
             runGeneration();
@@ -966,9 +992,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         clearSearchResults();
         addSupertypesCheck.setSelected(false);
         addReferencingCheck.setSelected(false);
-        // Reset options (need the allOptionChecks array — rebuild it here)
-        JCheckBox[] allOptionChecks = { packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showPolicyCheck,
-                showProductCheck, showTablesCheck, showTableUsageCheck, showEnumTypesCheck, showEnumContentCheck, showEnumAssocCheck, showMavenModuleCheck, showDescriptionsCheck };
         resetOptions(allOptionChecks);
         // Open empty diagram
         GeneratePlantUmlAction.openInEditor(project, EMPTY_PUML);
@@ -1030,7 +1053,8 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         if (!searchResults.isEmpty()) {
             // Search is active — only generate from selected results, never fall back to directories
             if (selectedSearchFiles.isEmpty()) {
-                LOG.info("runGeneration: search active but no results selected, skipping");
+                LOG.info("runGeneration: search active but no results selected, clearing diagram");
+                GeneratePlantUmlAction.openInEditor(project, EMPTY_PUML);
                 return;
             }
             LOG.info("runGeneration: generating from " + selectedSearchFiles.size() + " search results");
@@ -1074,6 +1098,10 @@ public class Ips2PlantToolWindowPanel extends JPanel {
             var localDirs = getSelectedLocalDirs();
             var depDirs = getSelectedDependencyDirs();
             if (localDirs.isEmpty() && depDirs.isEmpty()) {
+                if (!Ips2PlantSettings.getInstance().generateFallbackToAll) {
+                    LOG.info("runGeneration: no directories selected and generateAllWhenNoneSelected=false, skipping");
+                    return;
+                }
                 localDirs = getAllLocalModelDirs();
                 depDirs = getAllDependencyDirs();
                 if (localDirs.isEmpty() && depDirs.isEmpty()) {
@@ -1122,8 +1150,10 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     }
 
     private void updateSelectAllState(JCheckBox[] checks) {
+        boolean ignoreDescriptions = Ips2PlantSettings.getInstance().selectAllIgnoresDescriptions;
         boolean allSelected = true;
         for (var cb : checks) {
+            if (ignoreDescriptions && cb == showDescriptionsCheck) continue;
             if (!cb.isSelected()) {
                 allSelected = false;
                 break;

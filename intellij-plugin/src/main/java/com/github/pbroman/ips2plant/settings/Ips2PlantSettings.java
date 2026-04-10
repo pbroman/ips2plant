@@ -9,6 +9,13 @@ import com.intellij.openapi.components.Storage;
 public class Ips2PlantSettings implements PersistentStateComponent<Ips2PlantSettings> {
 
     public String locale = "de";
+    public boolean generateFallbackToAll = true;
+    public boolean generateResetsOptions = false;
+    public boolean searchFallbackToAll = true;
+    public boolean searchSelectsAllClassTypes = true;
+    public boolean searchResetsOptions = false;
+    public boolean retriggerOnDirChange = false;
+    public boolean selectAllIgnoresDescriptions = true;
 
     public static Ips2PlantSettings getInstance() {
         return ApplicationManager.getApplication().getService(Ips2PlantSettings.class);
@@ -22,5 +29,12 @@ public class Ips2PlantSettings implements PersistentStateComponent<Ips2PlantSett
     @Override
     public void loadState(Ips2PlantSettings state) {
         this.locale = state.locale;
+        this.generateFallbackToAll = state.generateFallbackToAll;
+        this.generateResetsOptions = state.generateResetsOptions;
+        this.searchFallbackToAll = state.searchFallbackToAll;
+        this.searchSelectsAllClassTypes = state.searchSelectsAllClassTypes;
+        this.searchResetsOptions = state.searchResetsOptions;
+        this.retriggerOnDirChange = state.retriggerOnDirChange;
+        this.selectAllIgnoresDescriptions = state.selectAllIgnoresDescriptions;
     }
 }
