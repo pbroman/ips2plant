@@ -36,14 +36,13 @@ The right-click action uses the diagram options configured in the tool window (s
 
 ### Tool Window
 
-1. Open the **IPS to PlantUML** tool window (bottom panel)
+1. Open the **IPS to PlantUML** tool window (right panel)
 2. The plugin auto-detects `.ipsproject` files in your project and shows the model directories as a checkbox tree
 3. Select the model directories you want to include
-4. Configure the diagram options as needed
-5. Click **Generate Model UML** — if no directories are selected, all detected directories are used
-6. The generated `.puml` opens in the editor
-7. The diagram regenerates automatically when options are changed
-8. **Generate Model UML** always clears any active search and generates from model directories
+4. Click **Generate Model UML** — if no directories are selected, all detected directories are used
+5. The generated `.puml` opens in the editor
+6. Configure the diagram options as needed. The diagram regenerates automatically when options are changed
+7. **Generate Model UML** always clears any active search and generates from model directories
 
 ### Resolve Dependencies
 
@@ -120,10 +119,4 @@ As shown in generated plantUml:
 ```bash
 cd intellij-plugin
 ./gradlew buildPlugin
-```
-
-To run a development instance of IntelliJ with the plugin loaded:
-
-```bash
-./gradlew runIde
 ```

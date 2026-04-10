@@ -16,7 +16,12 @@ repositories {
 dependencies {
     intellijPlatform {
         instrumentationTools()
-        intellijIdeaCommunity("2024.1")
+        val localIde = providers.gradleProperty("localIde").orNull
+        if (localIde != null) {
+            local(localIde)
+        } else {
+            intellijIdeaCommunity("2024.1")
+        }
     }
     implementation("net.sf.saxon:Saxon-HE:12.5")
 

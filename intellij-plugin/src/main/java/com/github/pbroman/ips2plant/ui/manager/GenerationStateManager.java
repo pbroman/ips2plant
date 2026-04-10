@@ -1,4 +1,4 @@
-package com.github.pbroman.ips2plant.ui;
+package com.github.pbroman.ips2plant.ui.manager;
 
 /**
  * Tracks whether the tool window is in model-generation mode or search mode.
