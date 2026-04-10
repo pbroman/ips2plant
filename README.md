@@ -6,7 +6,7 @@ Three implementations are available:
 
 | Implementation | Status | Description |
 |---|---|---|
-| **IntelliJ Plugin** (`intellij-plugin/`) | Active | IDE tool window + right-click action |
+| **IntelliJ Plugin** (`intellij-plugin/`) | Active | IDE tool window |
 | **Quarkus CLI** (`quarkus/`) | Active | Java CLI, no extra tooling required |
 | **Bash script** (`ips2plant.sh`) | Legacy | Requires `xsltproc` (Linux/WSL/Docker) |
 

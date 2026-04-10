@@ -23,7 +23,6 @@ import javax.swing.event.DocumentListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
-import com.github.pbroman.ips2plant.action.GeneratePlantUmlAction;
 import com.github.pbroman.ips2plant.core.Ips2PlantOptions;
 import com.github.pbroman.ips2plant.settings.Ips2PlantSettings;
 import com.github.pbroman.ips2plant.ui.manager.DependencyManager;
@@ -211,7 +210,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                 if (searchField.getText().isEmpty()) {
                     generationState.deactivateSearch();
                     searchManager.clearSearchResults();
-                    GeneratePlantUmlAction.openInEditor(project, GenerationManager.EMPTY_PUML);
+                    GenerationManager.openInEditor(project, GenerationManager.EMPTY_PUML);
                 }
             }
         });
@@ -394,7 +393,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchManager.clearSearchResults();
         searchManager.resetSearchOptions();
         resetOptions(allOptionChecks);
-        GeneratePlantUmlAction.openInEditor(project, GenerationManager.EMPTY_PUML);
+        GenerationManager.openInEditor(project, GenerationManager.EMPTY_PUML);
     }
 
     private void updateSelectAllState(JCheckBox[] checks) {

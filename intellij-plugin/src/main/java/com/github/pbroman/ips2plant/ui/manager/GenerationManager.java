@@ -1,23 +1,27 @@
 package com.github.pbroman.ips2plant.ui.manager;
 
-import com.github.pbroman.ips2plant.action.GeneratePlantUmlAction;
 import com.github.pbroman.ips2plant.core.Ips2PlantGenerator;
 import com.github.pbroman.ips2plant.core.Ips2PlantOptions;
 import com.github.pbroman.ips2plant.core.IpsClassSearcher;
 import com.github.pbroman.ips2plant.core.MavenModuleResolver;
 import com.github.pbroman.ips2plant.settings.Ips2PlantSettings;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
+import com.intellij.testFramework.LightVirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Timer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class GenerationManager {
@@ -27,6 +31,24 @@ public class GenerationManager {
     private static final String TASK_TITLE = "Generating PlantUML from IPS Models";
     private static final String TASK_STATUS_COLLECTING = "Collecting IPS files...";
     public static final String EMPTY_PUML = "@startuml\nnote \"Nothing to show\" as N1\n@enduml\n";
+
+    private static final Map<Project, LightVirtualFile> pumlFiles = new ConcurrentHashMap<>();
+
+    public static void openInEditor(Project project, String pumlContent) {
+        var existingFile = pumlFiles.get(project);
+        if (existingFile != null) {
+            var document = FileDocumentManager.getInstance().getDocument(existingFile);
+            if (document != null) {
+                WriteCommandAction.runWriteCommandAction(project, () ->
+                        document.setText(pumlContent));
+                FileEditorManager.getInstance(project).openFile(existingFile, true);
+                return;
+            }
+        }
+        var virtualFile = new LightVirtualFile("ips-model.puml", pumlContent);
+        pumlFiles.put(project, virtualFile);
+        FileEditorManager.getInstance(project).openFile(virtualFile, true);
+    }
 
     private final Project project;
     private final SearchManager searchManager;
@@ -63,7 +85,7 @@ public class GenerationManager {
             // Search is active — only generate from selected results, never fall back to directories
             if (selectedSearchFiles.isEmpty()) {
                 LOG.info("runGeneration: search active but no results selected, clearing diagram");
-                GeneratePlantUmlAction.openInEditor(project, EMPTY_PUML);
+                GenerationManager.openInEditor(project, EMPTY_PUML);
                 return;
             }
             LOG.info("runGeneration: generating from " + selectedSearchFiles.size() + " search results");
@@ -98,7 +120,7 @@ public class GenerationManager {
                     }
                     var pumlContent = generator.generate(ipsFiles, options, indicator::setText, mavenModules);
                     ApplicationManager.getApplication().invokeLater(() ->
-                            GeneratePlantUmlAction.openInEditor(project, pumlContent));
+                            GenerationManager.openInEditor(project, pumlContent));
                 }
             });
         } else {
@@ -128,7 +150,7 @@ public class GenerationManager {
                     var generator = new Ips2PlantGenerator();
                     var pumlContent = generator.generate(finalLocalDirs, finalDepDirs, options, indicator::setText, depModules);
                     ApplicationManager.getApplication().invokeLater(() ->
-                            GeneratePlantUmlAction.openInEditor(project, pumlContent));
+                            GenerationManager.openInEditor(project, pumlContent));
                 }
             });
         }

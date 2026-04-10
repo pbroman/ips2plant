@@ -25,16 +25,6 @@ An IntelliJ IDEA plugin that generates [PlantUML](https://plantuml.com/) class d
 
 ## Usage
 
-There are two ways to generate a diagram:
-
-### Right-Click Action
-
-1. In the **Project** view, right-click on one or more directories containing IPS model files
-2. Select **Generate PlantUML Diagram**
-3. The generated `.puml` opens in the editor
-
-The right-click action uses the diagram options configured in the tool window (see below).
-
 ### Tool Window
 
 1. Open the **IPS to PlantUML** tool window (right panel)
