@@ -155,7 +155,7 @@ public class DependencyManager {
         Files.deleteIfExists(path);
     }
 
-    private HashSet<String> collectProjectArtifactIds(Path projectRoot) {
+    HashSet<String> collectProjectArtifactIds(Path projectRoot) {
         var artifactIds = new HashSet<String>();
         var artifactPattern = Pattern.compile("<artifactId>([^<]+)</artifactId>");
         try (var stream = Files.walk(projectRoot)) {
@@ -181,7 +181,7 @@ public class DependencyManager {
         return artifactIds;
     }
 
-    private Path findPomDir(Path modelDir) {
+    Path findPomDir(Path modelDir) {
         var current = modelDir.getParent();
         while (current != null) {
             if (Files.isRegularFile(current.resolve("pom.xml"))) {

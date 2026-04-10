@@ -36,7 +36,7 @@ class XsltProcessorTest {
                 """;
 
         // when
-        var result = processor.transform(xml, Map.of());
+        var result = processor.transform(xml, Map.of("showPolicyComponents", "true"));
 
         // then
         assertThat(result).contains("@startuml")
@@ -56,7 +56,7 @@ class XsltProcessorTest {
                     </PolicyCmptType>
                 </collection>
                 """;
-        var params = Map.of("connector", "----", "addAssociations", "true");
+        var params = Map.of("connector", "----", "addAssociations", "true", "showPolicyComponents", "true");
 
         // when
         var result = processor.transform(xml, params);

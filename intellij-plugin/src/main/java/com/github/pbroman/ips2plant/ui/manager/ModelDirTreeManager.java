@@ -183,7 +183,7 @@ public class ModelDirTreeManager {
         return result;
     }
 
-    boolean isDependenciesNode(CheckedTreeNode node) {
+    static boolean isDependenciesNode(CheckedTreeNode node) {
         return node.getUserObject() instanceof String text
                 && (text.equals(LABEL_DEPENDENCIES) || text.startsWith(LABEL_DEPENDENCIES + "/"));
     }

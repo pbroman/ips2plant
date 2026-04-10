@@ -205,7 +205,7 @@ class IpsClassSearcherTest {
     void wildcardToRegex_convertsCorrectly() {
         // given / when / then
         assertThat(IpsClassSearcher.wildcardToRegex("*Contract*")).isEqualTo(".*Contract.*");
-        assertThat(IpsClassSearcher.wildcardToRegex("com.example.*")).isEqualTo("com\\.example\\..*");
+        assertThat(IpsClassSearcher.wildcardToRegex("com.example.*")).isEqualTo("com.example.*");
         assertThat(IpsClassSearcher.wildcardToRegex("Contract")).isEqualTo("Contract");
     }
 

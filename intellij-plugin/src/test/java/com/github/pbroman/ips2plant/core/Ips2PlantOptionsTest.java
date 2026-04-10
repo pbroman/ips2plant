@@ -17,7 +17,9 @@ class Ips2PlantOptionsTest {
         // then
         assertThat(params).containsEntry("connector", "--")
                 .containsEntry("dottedConnector", "..")
-                .hasSize(2);
+                .containsEntry("showPolicyComponents", "true")
+                .containsEntry("descriptionLocale", "de")
+                .hasSize(4);
     }
 
     @Test

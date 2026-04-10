@@ -1,11 +1,9 @@
-package com.github.pbroman.ips2plant.ui;
+package com.github.pbroman.ips2plant.ui.manager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
-import com.github.pbroman.ips2plant.ui.manager.GenerationStateManager;
 
 class GenerationStateManagerTest {
 

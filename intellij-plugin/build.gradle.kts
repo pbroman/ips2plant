@@ -23,11 +23,11 @@ dependencies {
             intellijIdeaCommunity("2024.1")
         }
     }
-    implementation("net.sf.saxon:Saxon-HE:12.5")
+    implementation("net.sf.saxon:Saxon-HE:12.9")
 
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
+    testImplementation(platform("org.junit:junit-bom:5.14.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.assertj:assertj-core:3.27.3")
+    testImplementation("org.assertj:assertj-core:3.27.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
