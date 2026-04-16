@@ -59,7 +59,8 @@ For multiple model directories repeat `-p`:
 | `-ea` | `--show-enum-assoc` | Show enum associations (including external enums) |
 | `-m` | `--maven` | Show Maven module for each class |
 | `-d` | `--descriptions` | Show description texts as PlantUML notes |
-| `-c` | `--locale` | Language for descriptions and enum content (default: `de`) |
+| `-c` | `--cardinalities` | Show cardinalities on association arrows |
+| `-lo` | `--locale` | Language for descriptions and enum content (default: `de`) |
 | `-pf` | `--package-filter` | Limit diagram to a specific package and its associations |
 | `-l` | `--connector-length` | Length of association connectors (default: 2) |
 

@@ -117,7 +117,12 @@ public class Ips2PlantCommand implements Callable<Integer> {
         setTrue("showDescriptions");
     }
 
-    @Option(names = {"-c", "--locale"}, description = "Locale for descriptions and enum content (default: de, falls back to de if not found)")
+    @Option(names = {"-c", "--cardinalities"}, description = "Show cardinalities on association arrows")
+    private void showCardinalities(boolean dummy) {
+        setTrue("showCardinalities");
+    }
+
+    @Option(names = {"-lo", "--locale"}, description = "Locale for descriptions and enum content (default: de, falls back to de if not found)")
     private void setLocale(String locale) {
         xsltParams.put("descriptionLocale", locale);
     }

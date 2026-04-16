@@ -20,6 +20,7 @@ public class Ips2PlantConfigurable implements Configurable {
     private JCheckBox searchResetsOptionsCheck;
     private JCheckBox retriggerOnDirChangeCheck;
     private JCheckBox selectAllIgnoresDescriptionsCheck;
+    private JCheckBox showConnectorLengthCheck;
 
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
@@ -44,6 +45,8 @@ public class Ips2PlantConfigurable implements Configurable {
                 "Selecting / deselecting model directories retriggers model generation / search");
         selectAllIgnoresDescriptionsCheck = new JCheckBox(
                 "Options Select All ignores Descriptions (deselect still clears Descriptions)");
+        showConnectorLengthCheck = new JCheckBox(
+                "Show Connector Length spinner in Options");
 
         var panel = new JPanel(new GridBagLayout());
         var gbc = new GridBagConstraints();
@@ -85,6 +88,9 @@ public class Ips2PlantConfigurable implements Configurable {
         gbc.gridy = row++;
         panel.add(selectAllIgnoresDescriptionsCheck, gbc);
 
+        gbc.gridy = row++;
+        panel.add(showConnectorLengthCheck, gbc);
+
         // push everything to top-left
         gbc.gridy = row;
         gbc.weightx = 1.0;
@@ -106,7 +112,8 @@ public class Ips2PlantConfigurable implements Configurable {
                 || searchSelectsAllClassTypesCheck.isSelected() != s.searchSelectsAllClassTypes
                 || searchResetsOptionsCheck.isSelected() != s.searchResetsOptions
                 || retriggerOnDirChangeCheck.isSelected() != s.retriggerOnDirChange
-                || selectAllIgnoresDescriptionsCheck.isSelected() != s.selectAllIgnoresDescriptions;
+                || selectAllIgnoresDescriptionsCheck.isSelected() != s.selectAllIgnoresDescriptions
+                || showConnectorLengthCheck.isSelected() != s.showConnectorLength;
     }
 
     @Override
@@ -121,6 +128,7 @@ public class Ips2PlantConfigurable implements Configurable {
         s.searchResetsOptions = searchResetsOptionsCheck.isSelected();
         s.retriggerOnDirChange = retriggerOnDirChangeCheck.isSelected();
         s.selectAllIgnoresDescriptions = selectAllIgnoresDescriptionsCheck.isSelected();
+        s.showConnectorLength = showConnectorLengthCheck.isSelected();
     }
 
     @Override
@@ -134,5 +142,6 @@ public class Ips2PlantConfigurable implements Configurable {
         searchResetsOptionsCheck.setSelected(s.searchResetsOptions);
         retriggerOnDirChangeCheck.setSelected(s.retriggerOnDirChange);
         selectAllIgnoresDescriptionsCheck.setSelected(s.selectAllIgnoresDescriptions);
+        showConnectorLengthCheck.setSelected(s.showConnectorLength);
     }
 }

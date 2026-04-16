@@ -82,8 +82,9 @@ The search searches all selected model directories, including selected dependenc
 | Maven Modules           |         | Shows in which Maven module each class is defined                               |
 | Enum Associations       |         | Shows enum associations (including external enums)                              |
 | Descriptions            |         | Shows IPS description texts as PlantUML notes (language set in Settings)        |
+| Cardinalities           |         | Shows cardinalities on association arrows                                       |
 | Package Filter          |         | Limits the diagram to a specific package and its associations                   |
-| Connector Length        | 2       | Length of association connectors                                                |
+| Connector Length        | 2       | Length of association connectors (visible only when enabled in Settings)        |
 
 **Select All** enables all option checkboxes at once (by default, Descriptions is excluded from Select All — see Settings). **Select None** turns them off. **Reset to Default** reverts the options to their initial state (Policy Components on, all others off, package filter cleared, connector length 2). **Reset All** unchecks all model directories, clears the search, resets all options to default, and clears the diagram.
 
@@ -101,6 +102,7 @@ Open **Settings > Tools > IPS to PlantUML** to configure plugin behaviour.
 | Search resets all options (other than class types found, when selected) | | When a search completes, all options (except those auto-enabled by the previous setting) are reset first |
 | Selecting / deselecting model directories retriggers model generation / search | | Checking or unchecking a directory in the tree immediately regenerates the current diagram or search |
 | Options Select All ignores Descriptions | ✓ | Clicking **Select All** does not enable the **Descriptions** option; deselecting still clears it |
+| Show Connector Length spinner in Options | | Makes the **Connector Length** control visible in the tool window |
 
 ## Attribute Types
 

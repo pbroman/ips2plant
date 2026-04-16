@@ -22,6 +22,7 @@
     <xsl:param name="showMavenModule"/>
     <xsl:param name="showDescriptions"/>
     <xsl:param name="descriptionLocale" select="'de'"/>
+    <xsl:param name="showCardinalities"/>
 
     <!-- Constants -->
     <xsl:variable name="policySpot">(V,lightSteelBlue)</xsl:variable>

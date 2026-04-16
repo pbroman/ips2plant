@@ -61,11 +61,14 @@
                 </xsl:variable>
 
                 <xsl:value-of select="$className"/>
-                <xsl:if test="$targetMin != '' and $targetMax != ''">
-                    <xsl:value-of select="concat(' &quot;', $targetMin, '..', $targetMax, '&quot; ')"/>
+                <xsl:if test="$showCardinalities and $targetMin != '' and $targetMax != ''">
+                    <xsl:value-of select="concat(' &quot;', $targetMin, '..', $targetMax, '&quot;')"/>
                 </xsl:if>
-                <xsl:value-of
-                    select="concat(' *', $connector, ' &quot;', @minCardinality, '..', @maxCardinality, '&quot; ', $target)"/>
+                <xsl:value-of select="concat(' *', $connector, ' ')"/>
+                <xsl:if test="$showCardinalities">
+                    <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
+                </xsl:if>
+                <xsl:value-of select="$target"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
@@ -88,7 +91,12 @@
             </xsl:variable>
 
             <xsl:if test="f:is-relationship-visible($isTargetPresent, $classNameWithPackage, $targetWithPackage)">
-                <xsl:value-of select="concat(f:class-name(@target), ' &lt;', $connector, ' ', $className)"/>
+                <xsl:value-of select="f:class-name(@target)"/>
+                <xsl:value-of select="concat(' &lt;', $connector, ' ')"/>
+                <xsl:if test="$showCardinalities">
+                    <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
+                </xsl:if>
+                <xsl:value-of select="$className"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
@@ -111,8 +119,11 @@
             </xsl:variable>
 
             <xsl:if test="f:is-relationship-visible($isTargetPresent, $classNameWithPackage, $targetWithPackage)">
-                <xsl:value-of
-                    select="concat($className, ' o', $connector, ' &quot;', @minCardinality, '..', @maxCardinality, '&quot; ', f:class-name(@target))"/>
+                <xsl:value-of select="concat($className, ' o', $connector, ' ')"/>
+                <xsl:if test="$showCardinalities">
+                    <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
+                </xsl:if>
+                <xsl:value-of select="f:class-name(@target)"/>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
