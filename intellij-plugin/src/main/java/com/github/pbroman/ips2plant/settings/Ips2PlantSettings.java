@@ -4,9 +4,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
+import com.intellij.util.messages.Topic;
 
 @State(name = "Ips2PlantSettings", storages = @Storage("ips2plant.xml"))
 public class Ips2PlantSettings implements PersistentStateComponent<Ips2PlantSettings> {
+
+    public interface SettingsListener {
+        Topic<SettingsListener> TOPIC = Topic.create("Ips2PlantSettingsChanged", SettingsListener.class);
+        void settingsChanged();
+    }
 
     public String locale = "de";
     public boolean generateFallbackToAll = true;

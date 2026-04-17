@@ -1,5 +1,6 @@
 package com.github.pbroman.ips2plant.settings;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.Configurable;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
@@ -129,6 +130,8 @@ public class Ips2PlantConfigurable implements Configurable {
         s.retriggerOnDirChange = retriggerOnDirChangeCheck.isSelected();
         s.selectAllIgnoresDescriptions = selectAllIgnoresDescriptionsCheck.isSelected();
         s.showConnectorLength = showConnectorLengthCheck.isSelected();
+        ApplicationManager.getApplication().getMessageBus()
+                .syncPublisher(Ips2PlantSettings.SettingsListener.TOPIC).settingsChanged();
     }
 
     @Override

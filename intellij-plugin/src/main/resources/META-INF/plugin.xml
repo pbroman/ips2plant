@@ -2,16 +2,6 @@
     <id>com.github.pbroman.ips2plant</id>
     <name>IPS to PlantUML</name>
     <vendor>pbroman</vendor>
-    <description><![CDATA[
-        Generates PlantUML class diagrams from Faktor-IPS model files (.ipspolicycmpttype, .ipsproductcmpttype, .ipsenumtype, .ipsenumcontent, .ipstablestructure).
-        <br/>
-        <ul>
-            <li>Tool window with model directory tree, search, and diagram options</li>
-            <li>Resolve IPS model files from Maven dependency JARs</li>
-            <li>Opens result directly in the editor</li>
-        </ul>
-    ]]></description>
-
     <depends>com.intellij.modules.platform</depends>
 
     <extensions defaultExtensionNs="com.intellij">

@@ -46,7 +46,7 @@ public class ModelDirTreeManager {
                     }
                 }
             }
-        }, treeRoot);
+        }, treeRoot, new CheckboxTree.CheckPolicy(false, false, false, false));
         modelDirTree.setRootVisible(false);
         modelDirTree.setShowsRootHandles(true);
         modelDirTree.addCheckboxTreeListener(new CheckboxTreeListener() {
@@ -104,10 +104,12 @@ public class ModelDirTreeManager {
     public void addDependencyNodes(List<DependencyModel> depModels) {
         removeDependenciesNode();
         var depsNode = new CheckedTreeNode(LABEL_DEPENDENCIES);
+        depsNode.setChecked(false);
         for (var dep : depModels) {
             var artifactNode = findChildByName(depsNode, dep.artifactId());
             if (artifactNode == null) {
                 artifactNode = new CheckedTreeNode(dep.artifactId());
+                artifactNode.setChecked(false);
                 depsNode.add(artifactNode);
             }
             var entry = new ModelDirEntry("model", dep.modelDir());
@@ -131,6 +133,7 @@ public class ModelDirTreeManager {
         }
         if (toRemove != null) {
             treeRoot.remove(toRemove);
+            reloadTree();
         }
     }
 
@@ -205,6 +208,7 @@ public class ModelDirTreeManager {
                 current = existing;
             } else {
                 var folderNode = new CheckedTreeNode(segment);
+                folderNode.setChecked(false);
                 current.add(folderNode);
                 current = folderNode;
             }

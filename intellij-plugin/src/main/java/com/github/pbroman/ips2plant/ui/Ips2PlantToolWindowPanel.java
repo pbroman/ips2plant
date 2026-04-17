@@ -30,6 +30,7 @@ import com.github.pbroman.ips2plant.ui.manager.GenerationManager;
 import com.github.pbroman.ips2plant.ui.manager.GenerationStateManager;
 import com.github.pbroman.ips2plant.ui.manager.ModelDirTreeManager;
 import com.github.pbroman.ips2plant.ui.manager.SearchManager;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
@@ -122,6 +123,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final JCheckBox showPolicyCheck = withTooltip(new JCheckBox(LABEL_SHOW_POLICY_COMPONENTS, true), TOOLTIP_SHOW_POLICY_COMPONENTS);
     private final JCheckBox showProductCheck = withTooltip(new JCheckBox(LABEL_SHOW_PRODUCT_COMPONENTS), TOOLTIP_SHOW_PRODUCT_COMPONENTS);
     private final JTextField packageFilterField = withTooltip(new JTextField(15), TOOLTIP_PACKAGE_FILTER);
+    private final JLabel connectorLengthLabel = new JLabel(LABEL_CONNECTOR_LENGTH);
     private final JSpinner connectorLengthSpinner = withTooltip(new JSpinner(new SpinnerNumberModel(2, 1, 10, 1)), TOOLTIP_CONNECTOR_LENGTH);
     private JCheckBox[] allOptionChecks;
 
@@ -153,6 +155,10 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         setPreferredSize(new Dimension(PREFERRED_WIDTH, 600));
         buildUi();
         treeManager.detectModelDirs();
+
+        ApplicationManager.getApplication().getMessageBus().connect(project)
+                .subscribe(Ips2PlantSettings.SettingsListener.TOPIC,
+                        () -> updateConnectorLengthVisibility());
     }
 
     private void buildUi() {
@@ -280,7 +286,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         JCheckBox[] leftColumn  = { showPolicyCheck, showProductCheck, showTablesCheck, showEnumTypesCheck, showEnumContentCheck, showTableUsageCheck, showEnumAssocCheck };
-        JCheckBox[] rightColumn = { showCardinalitiesCheck, packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showDescriptionsCheck };
+        JCheckBox[] rightColumn = { packagesCheck, showCardinalitiesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck, showMavenModuleCheck, showDescriptionsCheck };
 
         int maxRows = Math.max(leftColumn.length, rightColumn.length);
         for (int i = 0; i < maxRows; i++) {
@@ -301,13 +307,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         gbc.gridx = 1; gbc.weightx = 1.0;
         optionsPanel.add(packageFilterField, gbc);
 
-        if (Ips2PlantSettings.getInstance().showConnectorLength) {
-            gbc.gridy = row;
-            gbc.gridx = 0; gbc.weightx = 0;
-            optionsPanel.add(new JLabel(LABEL_CONNECTOR_LENGTH), gbc);
-            gbc.gridx = 1; gbc.weightx = 1.0;
-            optionsPanel.add(connectorLengthSpinner, gbc);
-        }
+        gbc.gridy = row;
+        gbc.gridx = 0; gbc.weightx = 0;
+        optionsPanel.add(connectorLengthLabel, gbc);
+        gbc.gridx = 1; gbc.weightx = 1.0;
+        optionsPanel.add(connectorLengthSpinner, gbc);
+        updateConnectorLengthVisibility();
 
         var optionsScrollPane = new JScrollPane(optionsPanel);
         optionsScrollPane.setBorder(BorderFactory.createTitledBorder(TITLE_OPTIONS));
@@ -430,6 +435,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                 showEnumContentCheck.setSelected(true);
             }
         }
+    }
+
+    private void updateConnectorLengthVisibility() {
+        boolean visible = Ips2PlantSettings.getInstance().showConnectorLength;
+        connectorLengthLabel.setVisible(visible);
+        connectorLengthSpinner.setVisible(visible);
     }
 
     private void showTemporaryStatusHint(String message, int durationMs) {
