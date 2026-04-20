@@ -9,7 +9,7 @@
 
             <xsl:variable name="classType">
                 <xsl:value-of select="$bb"/>
-                <xsl:if test="not(@abstract)">
+                <xsl:if test="not(@abstract = 'true')">
                     <xsl:text>(E,</xsl:text>
                     <xsl:choose>
                         <xsl:when test="@extensible">

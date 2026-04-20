@@ -41,28 +41,28 @@ For multiple model directories repeat `-p`:
 
 ### Options
 
-| Flag | Long form | Description |
-|------|-----------|-------------|
-| `-p` | `--paths` | Path(s) to model directories (repeat for multiple) |
-| `-o` | `--output` | Output file path (`.puml`) |
-| `-w` | `--workdir` | Working directory for intermediate `collection.xml` |
-| `-k` | `--packages` | Group classes into their packages |
-| `-r` | `--print-target-role` | Print `targetRolePlural` on composition arrows |
-| `-s` | `--add-super-type` | Add supertypes not present in the scanned models |
-| `-a` | `--add-associations` | Add associations to classes not in the scanned models |
-| `-pr` | `--show-products` | Show product component types |
-| `-np` | `--no-policies` | Hide policy component types |
-| `-t` | `--show-tables` | Show table structures |
-| `-tu` | `--show-table-usage` | Show table usage by product component types |
-| `-et` | `--show-enum-types` | Show enum types |
-| `-ec` | `--show-enum-content` | Show enum content (values of extensible enum types) |
-| `-ea` | `--show-enum-assoc` | Show enum associations (including external enums) |
-| `-m` | `--maven` | Show Maven module for each class |
-| `-d` | `--descriptions` | Show description texts as PlantUML notes |
-| `-c` | `--cardinalities` | Show cardinalities on association arrows |
+| Flag | Long form | Description                                                |
+|------|-----------|------------------------------------------------------------|
+| `-p` | `--paths` | Path(s) to model directories (repeat for multiple)         |
+| `-o` | `--output` | Output file path (`.puml`)                                 |
+| `-w` | `--workdir` | Working directory for intermediate `collection.xml`        |
+| `-k` | `--packages` | Group classes into their packages                          |
+| `-r` | `--print-target-role` | Print `targetRolePlural` on composition arrows             |
+| `-s` | `--add-super-type` | Add supertypes not present in the scanned models           |
+| `-a` | `--add-associations` | Add associations to classes not in the scanned models      |
+| `-pr` | `--show-products` | Show product component types                               |
+| `-np` | `--no-policies` | Hide policy component types                                |
+| `-t` | `--show-tables` | Show table structures                                      |
+| `-tu` | `--show-table-usage` | Show table usage by product component types                |
+| `-et` | `--show-enum-types` | Show enum types                                            |
+| `-ec` | `--show-enum-content` | Show enum content (values of extensible enum types)        |
+| `-ea` | `--show-enum-assoc` | Show enum associations (including external enums)          |
+| `-m` | `--maven` | Show Maven module for each class                           |
+| `-d` | `--descriptions` | Show description texts as PlantUML notes                   |
+| `-c` | `--cardinalities` | Show cardinalities on association arrows                   |
 | `-lo` | `--locale` | Language for descriptions and enum content (default: `de`) |
-| `-pf` | `--package-filter` | Limit diagram to a specific package and its associations |
-| `-l` | `--connector-length` | Length of association connectors (default: 2) |
+| `-pf` | `--package-filter` | Filter the diagram by packages (Comma separates list)      |
+| `-l` | `--connector-length` | Length of association connectors (default: 2)              |
 
 ### Example
 

@@ -11,8 +11,8 @@
 
             <xsl:variable name="spot">
                 <xsl:choose>
-                    <xsl:when test="$componentType = 'ProductCmptType2' and not(@abstract)"><xsl:value-of select="$productSpot"/></xsl:when>
-                    <xsl:when test="$componentType = 'PolicyCmptType' and not(@abstract)"><xsl:value-of select="$policySpot"/></xsl:when>
+                    <xsl:when test="$componentType = 'ProductCmptType2' and not(@abstract = 'true')"><xsl:value-of select="$productSpot"/></xsl:when>
+                    <xsl:when test="$componentType = 'PolicyCmptType' and not(@abstract = 'true')"><xsl:value-of select="$policySpot"/></xsl:when>
                 </xsl:choose>
             </xsl:variable>
 

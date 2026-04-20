@@ -1,0 +1,46 @@
+THIRD-PARTY NOTICES
+===================
+
+This software (ips2plant-cli) bundles the following third-party components.
+
+
+Saxon-HE 12.9
+  Copyright (c) 2004-2024 Saxonica Limited
+  Licensed under the Mozilla Public License 2.0 (MPL-2.0)
+  https://www.mozilla.org/en-US/MPL/2.0/
+  https://www.saxonica.com/
+
+
+Quarkus 3.34.3 (and its components: quarkus-picocli, quarkus-arc)
+  Copyright (c) Red Hat, Inc. and contributors
+  Licensed under the Apache License 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+  https://quarkus.io/
+
+
+Apache Commons Lang 3
+  Copyright (c) The Apache Software Foundation
+  Licensed under the Apache License 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+  https://commons.apache.org/proper/commons-lang/
+
+
+Apache Commons IO
+  Copyright (c) The Apache Software Foundation
+  Licensed under the Apache License 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+  https://commons.apache.org/proper/commons-io/
+
+
+Apache Xalan 2.7.3
+  Copyright (c) The Apache Software Foundation
+  Licensed under the Apache License 2.0
+  https://www.apache.org/licenses/LICENSE-2.0
+  https://xalan.apache.org/
+
+
+The Quarkus framework brings additional transitive dependencies; all are
+licensed under the Apache License 2.0 or compatible permissive licenses.
+Full dependency information is available via Maven:
+
+  mvn dependency:tree -f quarkus/pom.xml

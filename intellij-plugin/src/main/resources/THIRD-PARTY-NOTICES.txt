@@ -1,0 +1,16 @@
+THIRD-PARTY NOTICES
+===================
+
+This software (IPS to PlantUML IntelliJ plugin) bundles the following
+third-party components.
+
+
+Saxon-HE 12.9
+  Copyright (c) 2004-2024 Saxonica Limited
+  Licensed under the Mozilla Public License 2.0 (MPL-2.0)
+  https://www.mozilla.org/en-US/MPL/2.0/
+  https://www.saxonica.com/
+
+
+The IntelliJ Platform is required to run this plugin but is not bundled
+with it; it is provided by your IDE installation (JetBrains s.r.o.).
