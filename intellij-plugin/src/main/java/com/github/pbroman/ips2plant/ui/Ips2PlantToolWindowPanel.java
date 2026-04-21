@@ -342,7 +342,11 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         packageFilterField.addActionListener(e -> generationManager.scheduleRegeneration());
         packageFilterField.addFocusListener(new FocusAdapter() {
             @Override
-            public void focusLost(FocusEvent e) { generationManager.scheduleRegeneration(); }
+            public void focusLost(FocusEvent e) { 
+                if (!e.isTemporary()) { 
+                    generationManager.scheduleRegeneration(); 
+                } 
+            }
         });
         packageFilterField.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e) { /* no-op */ }
