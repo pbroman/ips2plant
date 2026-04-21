@@ -23,6 +23,7 @@
     <xsl:param name="showDescriptions"/>
     <xsl:param name="descriptionLocale" select="'de'"/>
     <xsl:param name="showCardinalities"/>
+    <xsl:param name="sortAttributesAlphabetically"/>
 
     <!-- Constants -->
     <xsl:variable name="policySpot">(V,lightSteelBlue)</xsl:variable>

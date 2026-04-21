@@ -19,6 +19,7 @@ public class Ips2PlantOptions {
     private boolean showMavenModule;
     private boolean showDescriptions;
     private boolean showCardinalities;
+    private boolean sortAttributesAlphabetically;
     private String descriptionLocale = "de";
     private String packageFilter = "";
     private int connectorLength = 2;
@@ -45,6 +46,7 @@ public class Ips2PlantOptions {
         if (showMavenModule) params.put("showMavenModule", "true");
         if (showDescriptions) params.put("showDescriptions", "true");
         if (showCardinalities) params.put("showCardinalities", "true");
+        if (sortAttributesAlphabetically) params.put("sortAttributesAlphabetically", "true");
         params.put("descriptionLocale", descriptionLocale);
         if (!packageFilter.isBlank()) params.put("packageFilter", packageFilter);
 
@@ -92,6 +94,9 @@ public class Ips2PlantOptions {
 
     public boolean isShowCardinalities() { return showCardinalities; }
     public void setShowCardinalities(boolean showCardinalities) { this.showCardinalities = showCardinalities; }
+
+    public boolean isSortAttributesAlphabetically() { return sortAttributesAlphabetically; }
+    public void setSortAttributesAlphabetically(boolean sortAttributesAlphabetically) { this.sortAttributesAlphabetically = sortAttributesAlphabetically; }
 
     public String getDescriptionLocale() { return descriptionLocale; }
     public void setDescriptionLocale(String descriptionLocale) { this.descriptionLocale = descriptionLocale; }

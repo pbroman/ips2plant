@@ -103,6 +103,7 @@ Open **Settings > Tools > IPS to PlantUML** to configure plugin behaviour.
 | Selecting / deselecting model directories retriggers model generation / search | | Checking or unchecking a directory in the tree immediately regenerates the current diagram or search |
 | Options Select All ignores Descriptions | ✓ | Clicking **Select All** does not enable the **Descriptions** option; deselecting still clears it |
 | Show Connector Length spinner in Options | | Makes the **Connector Length** control visible in the tool window |
+| Sort attributes alphabetically in generated diagrams | | Sorts attributes (and table columns) by name; default is model definition order |
 
 ## Attribute Types
 

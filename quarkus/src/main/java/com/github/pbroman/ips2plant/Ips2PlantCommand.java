@@ -127,6 +127,11 @@ public class Ips2PlantCommand implements Callable<Integer> {
         xsltParams.put("descriptionLocale", locale);
     }
 
+    @Option(names = {"-so", "--sort-attr-alphabet"}, description = "Sort attributes alphabetically (default: model definition order)")
+    private void sortAttributesAlphabetically(boolean dummy) {
+        setTrue("sortAttributesAlphabetically");
+    }
+
     private void setTrue(String param) {
         xsltParams.put(param, "true");
     }

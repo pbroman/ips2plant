@@ -23,6 +23,7 @@ public class Ips2PlantSettings implements PersistentStateComponent<Ips2PlantSett
     public boolean retriggerOnDirChange = false;
     public boolean selectAllIgnoresDescriptions = true;
     public boolean showConnectorLength = false;
+    public boolean sortAttributesAlphabetically = false;
 
     public static Ips2PlantSettings getInstance() {
         return ApplicationManager.getApplication().getService(Ips2PlantSettings.class);
@@ -44,5 +45,6 @@ public class Ips2PlantSettings implements PersistentStateComponent<Ips2PlantSett
         this.retriggerOnDirChange = state.retriggerOnDirChange;
         this.selectAllIgnoresDescriptions = state.selectAllIgnoresDescriptions;
         this.showConnectorLength = state.showConnectorLength;
+        this.sortAttributesAlphabetically = state.sortAttributesAlphabetically;
     }
 }

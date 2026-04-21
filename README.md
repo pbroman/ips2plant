@@ -62,6 +62,7 @@ For multiple model directories repeat `-p`:
 | `-c` | `--cardinalities` | Show cardinalities on association arrows                   |
 | `-lo` | `--locale` | Language for descriptions and enum content (default: `de`) |
 | `-pf` | `--package-filter` | Filter the diagram by packages (Comma separates list)      |
+| `-so` | `--sort-attr-alphabet` | Sort attributes alphabetically (default: model definition order) |
 | `-l` | `--connector-length` | Length of association connectors (default: 2)              |
 
 ### Example

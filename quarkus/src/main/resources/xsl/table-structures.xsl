@@ -19,7 +19,7 @@
                     <xsl:text>  --&#xa;</xsl:text>
                 </xsl:if>
                 <xsl:for-each select="Column">
-                    <xsl:sort select="@name"/>
+                    <xsl:sort select="if ($sortAttributesAlphabetically = 'true') then @name else ''"/>
                     <xsl:value-of select="concat('  ', @name, ': ', f:substring-after-last(@datatype, '.'), '&#xa;')"/>
                 </xsl:for-each>
                 <xsl:text>}&#xa;</xsl:text>
@@ -30,7 +30,7 @@
                     <xsl:with-param name="description" select="Description[@locale=$descriptionLocale]"/>
                 </xsl:call-template>
                 <xsl:for-each select="Column">
-                    <xsl:sort select="@name"/>
+                    <xsl:sort select="if ($sortAttributesAlphabetically = 'true') then @name else ''"/>
                     <xsl:call-template name="attribute-description-note">
                         <xsl:with-param name="className" select="$className"/>
                         <xsl:with-param name="attrName" select="@name"/>

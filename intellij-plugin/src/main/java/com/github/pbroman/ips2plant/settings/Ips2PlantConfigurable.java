@@ -22,6 +22,7 @@ public class Ips2PlantConfigurable implements Configurable {
     private JCheckBox retriggerOnDirChangeCheck;
     private JCheckBox selectAllIgnoresDescriptionsCheck;
     private JCheckBox showConnectorLengthCheck;
+    private JCheckBox sortAttributesAlphabeticallyCheck;
 
     @Nls(capitalization = Nls.Capitalization.Title)
     @Override
@@ -48,6 +49,8 @@ public class Ips2PlantConfigurable implements Configurable {
                 "Options Select All ignores Descriptions (deselect still clears Descriptions)");
         showConnectorLengthCheck = new JCheckBox(
                 "Show Connector Length spinner in Options");
+        sortAttributesAlphabeticallyCheck = new JCheckBox(
+                "Sort attributes alphabetically in generated diagrams");
 
         var panel = new JPanel(new GridBagLayout());
         var gbc = new GridBagConstraints();
@@ -92,6 +95,9 @@ public class Ips2PlantConfigurable implements Configurable {
         gbc.gridy = row++;
         panel.add(showConnectorLengthCheck, gbc);
 
+        gbc.gridy = row++;
+        panel.add(sortAttributesAlphabeticallyCheck, gbc);
+
         // push everything to top-left
         gbc.gridy = row;
         gbc.weightx = 1.0;
@@ -114,7 +120,8 @@ public class Ips2PlantConfigurable implements Configurable {
                 || searchResetsOptionsCheck.isSelected() != s.searchResetsOptions
                 || retriggerOnDirChangeCheck.isSelected() != s.retriggerOnDirChange
                 || selectAllIgnoresDescriptionsCheck.isSelected() != s.selectAllIgnoresDescriptions
-                || showConnectorLengthCheck.isSelected() != s.showConnectorLength;
+                || showConnectorLengthCheck.isSelected() != s.showConnectorLength
+                || sortAttributesAlphabeticallyCheck.isSelected() != s.sortAttributesAlphabetically;
     }
 
     @Override
@@ -130,6 +137,7 @@ public class Ips2PlantConfigurable implements Configurable {
         s.retriggerOnDirChange = retriggerOnDirChangeCheck.isSelected();
         s.selectAllIgnoresDescriptions = selectAllIgnoresDescriptionsCheck.isSelected();
         s.showConnectorLength = showConnectorLengthCheck.isSelected();
+        s.sortAttributesAlphabetically = sortAttributesAlphabeticallyCheck.isSelected();
         ApplicationManager.getApplication().getMessageBus()
                 .syncPublisher(Ips2PlantSettings.SettingsListener.TOPIC).settingsChanged();
     }
@@ -146,5 +154,6 @@ public class Ips2PlantConfigurable implements Configurable {
         retriggerOnDirChangeCheck.setSelected(s.retriggerOnDirChange);
         selectAllIgnoresDescriptionsCheck.setSelected(s.selectAllIgnoresDescriptions);
         showConnectorLengthCheck.setSelected(s.showConnectorLength);
+        sortAttributesAlphabeticallyCheck.setSelected(s.sortAttributesAlphabetically);
     }
 }
