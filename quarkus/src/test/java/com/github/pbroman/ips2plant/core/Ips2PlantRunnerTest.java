@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import com.github.pbroman.ips2plant.core.assemble.DomXmlAssembler;
 import com.github.pbroman.ips2plant.core.collect.DefaultIpsFileCollector;
 import com.github.pbroman.ips2plant.Ips2PlantRunner;
-import com.github.pbroman.ips2plant.core.xslt.DefaultXsltProcessor;
+import com.github.pbroman.ips2plant.core.xslt.SaxonXsltProcessor;
 
 public class Ips2PlantRunnerTest extends AbstractTest {
 
@@ -16,7 +16,7 @@ public class Ips2PlantRunnerTest extends AbstractTest {
     void setup() {
         var collector = new DefaultIpsFileCollector();
         var assembler = new DomXmlAssembler();
-        var xsltProcessor = new DefaultXsltProcessor();
+        var xsltProcessor = new SaxonXsltProcessor();
         ips2PlantRunner = new Ips2PlantRunner(collector, assembler, xsltProcessor);
     }
 

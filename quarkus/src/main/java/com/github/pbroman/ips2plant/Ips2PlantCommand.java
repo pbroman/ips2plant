@@ -10,9 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.github.pbroman.ips2plant.core.assemble.DomXmlAssembler;
 import com.github.pbroman.ips2plant.core.collect.DefaultIpsFileCollector;
-import com.github.pbroman.ips2plant.core.xslt.DefaultXsltProcessor;
 import com.github.pbroman.ips2plant.core.xslt.SaxonXsltProcessor;
-import com.github.pbroman.ips2plant.core.xslt.XalanXsltProcessor;
 import io.quarkus.picocli.runtime.annotations.TopCommand;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;

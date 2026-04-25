@@ -32,13 +32,6 @@ Apache Commons IO
   https://commons.apache.org/proper/commons-io/
 
 
-Apache Xalan 2.7.3
-  Copyright (c) The Apache Software Foundation
-  Licensed under the Apache License 2.0
-  https://www.apache.org/licenses/LICENSE-2.0
-  https://xalan.apache.org/
-
-
 The Quarkus framework brings additional transitive dependencies; all are
 licensed under the Apache License 2.0 or compatible permissive licenses.
 Full dependency information is available via Maven:
