@@ -67,6 +67,19 @@ intellijPlatform {
 }
 
 tasks {
+    // XSL files are authored in the Quarkus module (source of truth) and copied here at build time.
+    // The destination directory is git-ignored — do not edit the XSL files under src/main/resources/xsl/
+    // directly; edit them in ../quarkus/src/main/resources/xsl/ instead.
+    register<Copy>("syncXsl") {
+        from("../quarkus/src/main/resources/xsl")
+        into("src/main/resources/xsl")
+    }
+
+    // syncXsl must run before resources are processed so the copied files are included in the plugin JAR
+    processResources {
+        dependsOn("syncXsl")
+    }
+
     jarSearchableOptions {
         enabled = false
     }

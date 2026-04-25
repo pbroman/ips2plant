@@ -5,3 +5,7 @@ build/
 /gradle/
 /.intellijPlatform/
 gradle.properties
+
+# XSL files are copied here from ../quarkus/src/main/resources/xsl/ by the syncXsl Gradle task.
+# The quarkus module is the source of truth — do not commit these generated copies.
+src/main/resources/xsl/
