@@ -1,0 +1,54 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+note left of Alpha
+Alpha is the abstract base class of
+the policy hierarchy. It defines
+the basic attributes and the link
+to the product component.
+end note
+note right of Alpha::status
+The current status of the policy.
+end note
+note right of Alpha::derivedValue
+A derived value.
+end note
+note right of Alpha::computedAmount
+A computed amount.
+end note
+note right of Alpha::TYPE_CODE
+Constant for type identification.
+end note
+Alpha *-- Beta
+Delta <-- Alpha
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+note left of Beta
+Beta is the concrete subclass of
+Alpha.
+end note
+note right of Beta::statusKind
+The kind of status, references enum data.Status.
+end note
+note right of Beta::unknownRef
+References an enum that is not present in the model.
+end note
+Alpha <|-- Beta
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +coverageId: String
+}
+note left of Delta
+Delta is a policy from the coverage
+package.
+end note
+note right of Delta::coverageId
+Coverage identifier.
+end note
+@enduml

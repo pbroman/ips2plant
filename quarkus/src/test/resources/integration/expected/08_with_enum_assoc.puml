@@ -1,0 +1,32 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+Alpha *-- Beta
+Delta <-- Alpha
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+Beta ..> Status
+Alpha <|-- Beta
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +coverageId: String
+}
+class Status<<(E,MediumSeaGreen)EnumType>> { 
+  id: String
+  name: String
+  ACTIVE (ACTIVE)
+  INACTIVE (INACTIVE)
+}
+abstract class Kind<<EnumType>> { 
+  id: inherited
+  name: inherited
+  code: String
+}
+Status <|-- Kind
+@enduml

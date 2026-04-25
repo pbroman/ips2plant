@@ -1,0 +1,158 @@
+@startuml
+hide empty members
+abstract class policy.Alpha<<PolicyCmptType>> { 
+  test.module.policy
+  --
+  -TYPE_CODE: String
+  #computedAmount: Decimal
+  ~derivedValue: Integer
+  +status: String
+}
+note left of policy.Alpha
+Alpha ist die abstrakte Basisklasse
+der Police-Hierarchie. Sie
+definiert die grundlegenden
+Attribute und die Verknüpfung zum
+Produktbaustein.
+end note
+note right of policy.Alpha::TYPE_CODE
+Konstante zur Identifikation des Typs.
+end note
+note right of policy.Alpha::computedAmount
+Ein berechneter Betrag.
+end note
+note right of policy.Alpha::derivedValue
+Ein abgeleiteter Wert.
+end note
+note right of policy.Alpha::status
+Der aktuelle Status der Police.
+end note
+external.Base <|-- policy.Alpha
+policy.Alpha ..# policy.AlphaType
+policy.Alpha "1..1" *-- "1..*" policy.Beta : beta
+policy.Gamma <-- "0..1" policy.Alpha : gamma
+coverage.Delta <-- "0..1" policy.Alpha : delta
+policy.Alpha ..{ data.RateTable
+class policy.Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  test.module.policy
+  --
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+note left of policy.Beta
+Beta ist die konkrete Unterklasse
+von Alpha.
+end note
+note right of policy.Beta::statusKind
+Die Art des Status, referenziert das Enum data.Status.
+end note
+note right of policy.Beta::unknownRef
+Referenziert ein Enum das nicht im Modell vorhanden ist.
+end note
+policy.Beta ..> data.Status
+policy.Alpha <|-- policy.Beta
+abstract class policy.AlphaType<<ProductCmptType>> { 
+  test.module.policy
+  --
+}
+note left of policy.AlphaType
+AlphaType ist der abstrakte
+Produktbaustein zur Konfiguration
+von Alpha-Policen.
+end note
+external.SomeType <-- "0..1" policy.AlphaType : someType
+policy.AlphaType o-- "0..*" policy.BetaType : betaType
+class policy.BetaType<<(P,deepSkyBlue)ProductCmptType>> { 
+  test.module.policy
+  --
+  +productCode: String
+}
+note left of policy.BetaType
+BetaType ist der konkrete
+Produktbaustein für Beta-Policen.
+end note
+note right of policy.BetaType::productCode
+Produktkennzeichen.
+end note
+policy.AlphaType <|-- policy.BetaType
+class coverage.Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  test.module.coverage
+  --
+  +coverageId: String
+}
+note left of coverage.Delta
+Delta ist eine Police aus dem
+Coverage-Paket.
+end note
+note right of coverage.Delta::coverageId
+ID der Deckung.
+end note
+class data.Status<<(E,MediumSeaGreen)EnumType>> { 
+  test.module.data
+  --
+  id: String
+  name: String
+  ACTIVE (ACTIVE)
+  INACTIVE (INACTIVE)
+}
+note left of data.Status
+Enum für den Status einer Police.
+end note
+note right of data.Status::id
+Technische ID des Status.
+end note
+note right of data.Status::name
+Anzeigename des Status.
+end note
+abstract class data.Kind<<EnumType>> { 
+  test.module.data
+  --
+  code: String
+  id: inherited
+  name: inherited
+}
+note left of data.Kind
+Erweiterbares, abstraktes
+Basis-Enum für Arten.
+end note
+note right of data.Kind::code
+Zusätzlicher Code.
+end note
+note right of data.Kind::id
+Geerbte ID.
+end note
+note right of data.Kind::name
+Geerbter Name.
+end note
+data.Status <|-- data.Kind
+class data.KindContent<<(E,GreenYellow) EnumContent>> { 
+  test.module.data
+  --
+  id | name | code
+  --
+  KIND_A | Art A | A
+  KIND_B | Art B | B
+}
+data.Kind <|-- data.KindContent
+class data.RateTable<<(T,LightSalmon)TableStructure>> { 
+  test.module.data
+  --
+  key: String
+  rate: Decimal
+  statusRef: Status
+}
+note left of data.RateTable
+Tabelle mit Tarifsätzen pro
+Schlüssel.
+end note
+note right of data.RateTable::key
+Schlüssel für den Tarifsatz.
+end note
+note right of data.RateTable::rate
+Der Tarifsatz als Dezimalwert.
+end note
+note right of data.RateTable::statusRef
+Referenz auf den Status (Enum-Assoziation).
+end note
+data.RateTable ..> data.Status
+@enduml

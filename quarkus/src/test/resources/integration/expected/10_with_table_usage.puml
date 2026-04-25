@@ -1,0 +1,25 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+Alpha *-- Beta
+Delta <-- Alpha
+Alpha ..{ RateTable
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+Alpha <|-- Beta
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +coverageId: String
+}
+class RateTable<<(T,LightSalmon)TableStructure>> { 
+  key: String
+  rate: Decimal
+  statusRef: Status
+}
+@enduml

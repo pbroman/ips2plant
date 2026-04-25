@@ -1,0 +1,55 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+note left of Alpha
+Alpha ist die abstrakte Basisklasse
+der Police-Hierarchie. Sie
+definiert die grundlegenden
+Attribute und die Verknüpfung zum
+Produktbaustein.
+end note
+note right of Alpha::status
+Der aktuelle Status der Police.
+end note
+note right of Alpha::derivedValue
+Ein abgeleiteter Wert.
+end note
+note right of Alpha::computedAmount
+Ein berechneter Betrag.
+end note
+note right of Alpha::TYPE_CODE
+Konstante zur Identifikation des Typs.
+end note
+Alpha *-- Beta
+Delta <-- Alpha
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+note left of Beta
+Beta ist die konkrete Unterklasse
+von Alpha.
+end note
+note right of Beta::statusKind
+Die Art des Status, referenziert das Enum data.Status.
+end note
+note right of Beta::unknownRef
+Referenziert ein Enum das nicht im Modell vorhanden ist.
+end note
+Alpha <|-- Beta
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +coverageId: String
+}
+note left of Delta
+Delta ist eine Police aus dem
+Coverage-Paket.
+end note
+note right of Delta::coverageId
+ID der Deckung.
+end note
+@enduml

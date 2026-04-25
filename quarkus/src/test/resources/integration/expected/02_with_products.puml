@@ -1,0 +1,27 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+Alpha ..# AlphaType
+Alpha *-- Beta
+Delta <-- Alpha
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+Alpha <|-- Beta
+abstract class AlphaType<<ProductCmptType>> { 
+}
+AlphaType o-- BetaType
+class BetaType<<(P,deepSkyBlue)ProductCmptType>> { 
+  +productCode: String
+}
+AlphaType <|-- BetaType
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  +coverageId: String
+}
+@enduml

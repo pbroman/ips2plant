@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Synthetic test model for XSL integration tests.
+  Hand-crafted to cover every XSL code path (see integration-test-plan.md).
+  Do NOT modify unless a new XSL code path has no coverage.
+-->
+<collection>
+
+  <!--
+    policy.Alpha: abstract PolicyCmptType
+      - productCmptType link -> policy.AlphaType
+      - supertype -> external.Base  (not in model, triggers addSuperType path)
+      - all four attributeTypes
+      - comp -> policy.Beta
+      - ass  -> policy.Gamma        (not in model, triggers addAssociations path)
+      - ass  -> coverage.Delta      (in model but different package, triggers packageFilter path)
+      - TableStructureUsage -> data.RateTable
+      - Description in de + en
+      - mavenModule: test.module.policy
+  -->
+  <PolicyCmptType className="policy.Alpha"
+                  mavenModule="test.module.policy"
+                  abstract="true"
+                  productCmptType="policy.AlphaType"
+                  supertype="external.Base">
+    <Description locale="de">Alpha ist die abstrakte Basisklasse der Police-Hierarchie. Sie definiert die grundlegenden Attribute und die Verknüpfung zum Produktbaustein.</Description>
+    <Description locale="en">Alpha is the abstract base class of the policy hierarchy. It defines the basic attributes and the link to the product component.</Description>
+    <Attribute attributeType="changeable" datatype="String" name="status">
+      <Description locale="de">Der aktuelle Status der Police.</Description>
+      <Description locale="en">The current status of the policy.</Description>
+    </Attribute>
+    <Attribute attributeType="derived" datatype="Integer" name="derivedValue">
+      <Description locale="de">Ein abgeleiteter Wert.</Description>
+      <Description locale="en">A derived value.</Description>
+    </Attribute>
+    <Attribute attributeType="computed" datatype="Decimal" name="computedAmount">
+      <Description locale="de">Ein berechneter Betrag.</Description>
+      <Description locale="en">A computed amount.</Description>
+    </Attribute>
+    <Attribute attributeType="constant" datatype="String" name="TYPE_CODE">
+      <Description locale="de">Konstante zur Identifikation des Typs.</Description>
+      <Description locale="en">Constant for type identification.</Description>
+    </Attribute>
+    <Association associationType="comp"
+                 target="policy.Beta"
+                 targetRoleSingular="beta"
+                 minCardinality="1"
+                 maxCardinality="*">
+    </Association>
+    <Association associationType="ass"
+                 target="policy.Gamma"
+                 targetRoleSingular="gamma"
+                 minCardinality="0"
+                 maxCardinality="1">
+    </Association>
+    <Association associationType="ass"
+                 target="coverage.Delta"
+                 targetRoleSingular="delta"
+                 minCardinality="0"
+                 maxCardinality="1">
+    </Association>
+    <TableStructureUsage name="rateTableUsage">
+      <TableStructure tableStructure="data.RateTable"/>
+    </TableStructureUsage>
+  </PolicyCmptType>
+
+  <!--
+    policy.Beta: concrete PolicyCmptType
+      - supertype -> policy.Alpha   (in model, triggers normal inheritance path)
+      - reverseComp -> policy.Alpha (provides cardinality data for Alpha's comp arrow)
+      - Attribute datatype=data.Status (enum association: target present)
+      - Attribute datatype=data.UnknownEnum (enum association: target absent)
+  -->
+  <PolicyCmptType className="policy.Beta"
+                  mavenModule="test.module.policy"
+                  supertype="policy.Alpha">
+    <Description locale="de">Beta ist die konkrete Unterklasse von Alpha.</Description>
+    <Description locale="en">Beta is the concrete subclass of Alpha.</Description>
+    <Attribute attributeType="changeable" datatype="data.Status" name="statusKind">
+      <Description locale="de">Die Art des Status, referenziert das Enum data.Status.</Description>
+      <Description locale="en">The kind of status, references enum data.Status.</Description>
+    </Attribute>
+    <Attribute attributeType="changeable" datatype="data.UnknownEnum" name="unknownRef">
+      <Description locale="de">Referenziert ein Enum das nicht im Modell vorhanden ist.</Description>
+      <Description locale="en">References an enum that is not present in the model.</Description>
+    </Attribute>
+    <Association associationType="reverseComp"
+                 target="policy.Alpha"
+                 targetRoleSingular="alpha"
+                 minCardinality="1"
+                 maxCardinality="1">
+    </Association>
+  </PolicyCmptType>
+
+  <!--
+    policy.AlphaType: abstract ProductCmptType2
+      - policyCmptType link -> policy.Alpha
+      - aggr -> policy.BetaType
+      - ass  -> external.SomeType  (not in model)
+  -->
+  <ProductCmptType2 className="policy.AlphaType"
+                    mavenModule="test.module.policy"
+                    abstract="true"
+                    configurationForPolicyCmptType="true"
+                    policyCmptType="policy.Alpha">
+    <Description locale="de">AlphaType ist der abstrakte Produktbaustein zur Konfiguration von Alpha-Policen.</Description>
+    <Description locale="en">AlphaType is the abstract product component for configuring Alpha policies.</Description>
+    <Association associationType="aggr"
+                 target="policy.BetaType"
+                 targetRoleSingular="betaType"
+                 minCardinality="0"
+                 maxCardinality="*">
+    </Association>
+    <Association associationType="ass"
+                 target="external.SomeType"
+                 targetRoleSingular="someType"
+                 minCardinality="0"
+                 maxCardinality="1">
+    </Association>
+  </ProductCmptType2>
+
+  <!--
+    policy.BetaType: concrete ProductCmptType2
+      - supertype -> policy.AlphaType (in model)
+  -->
+  <ProductCmptType2 className="policy.BetaType"
+                    mavenModule="test.module.policy"
+                    supertype="policy.AlphaType">
+    <Description locale="de">BetaType ist der konkrete Produktbaustein für Beta-Policen.</Description>
+    <Description locale="en">BetaType is the concrete product component for Beta policies.</Description>
+    <Attribute attributeType="changeable" datatype="String" name="productCode">
+      <Description locale="de">Produktkennzeichen.</Description>
+      <Description locale="en">Product identifier code.</Description>
+    </Attribute>
+  </ProductCmptType2>
+
+  <!--
+    coverage.Delta: concrete PolicyCmptType in a different package.
+      - Exists so packageFilter=policy hides it (scenario 04)
+      - policy.Alpha has an ass -> coverage.Delta, so addAssociations forces it back (scenario 05)
+  -->
+  <PolicyCmptType className="coverage.Delta"
+                  mavenModule="test.module.coverage">
+    <Description locale="de">Delta ist eine Police aus dem Coverage-Paket.</Description>
+    <Description locale="en">Delta is a policy from the coverage package.</Description>
+    <Attribute attributeType="changeable" datatype="String" name="coverageId">
+      <Description locale="de">ID der Deckung.</Description>
+      <Description locale="en">Coverage identifier.</Description>
+    </Attribute>
+  </PolicyCmptType>
+
+  <!--
+    data.Status: non-extensible, non-abstract EnumType
+      - EnumAttributes: id (String), name (String)
+      - EnumValues inline (ACTIVE, INACTIVE)
+  -->
+  <EnumType className="data.Status"
+            mavenModule="test.module.data">
+    <Description locale="de">Enum für den Status einer Police.</Description>
+    <Description locale="en">Enum for the status of a policy.</Description>
+    <EnumAttribute datatype="String" name="id">
+      <Description locale="de">Technische ID des Status.</Description>
+      <Description locale="en">Technical ID of the status.</Description>
+    </EnumAttribute>
+    <EnumAttribute datatype="String" name="name">
+      <Description locale="de">Anzeigename des Status.</Description>
+      <Description locale="en">Display name of the status.</Description>
+    </EnumAttribute>
+    <EnumValue>
+      <EnumAttributeValue>ACTIVE</EnumAttributeValue>
+      <EnumAttributeValue>Aktiv</EnumAttributeValue>
+      <EnumLiteralNameAttributeValue>ACTIVE</EnumLiteralNameAttributeValue>
+    </EnumValue>
+    <EnumValue>
+      <EnumAttributeValue>INACTIVE</EnumAttributeValue>
+      <EnumAttributeValue>Inaktiv</EnumAttributeValue>
+      <EnumLiteralNameAttributeValue>INACTIVE</EnumLiteralNameAttributeValue>
+    </EnumValue>
+  </EnumType>
+
+  <!--
+    data.Kind: extensible, abstract EnumType
+      - EnumAttributes: id (inherited), name (inherited), code (String)
+      - superEnumType -> data.Status (in model, triggers enum inheritance path)
+  -->
+  <EnumType className="data.Kind"
+            mavenModule="test.module.data"
+            extensible="true"
+            abstract="true"
+            superEnumType="data.Status">
+    <Description locale="de">Erweiterbares, abstraktes Basis-Enum für Arten.</Description>
+    <Description locale="en">Extensible, abstract base enum for kinds.</Description>
+    <EnumAttribute datatype="" inherited="true" name="id">
+      <Description locale="de">Geerbte ID.</Description>
+      <Description locale="en">Inherited ID.</Description>
+    </EnumAttribute>
+    <EnumAttribute datatype="" inherited="true" name="name">
+      <Description locale="de">Geerbter Name.</Description>
+      <Description locale="en">Inherited name.</Description>
+    </EnumAttribute>
+    <EnumAttribute datatype="String" name="code">
+      <Description locale="de">Zusätzlicher Code.</Description>
+      <Description locale="en">Additional code.</Description>
+    </EnumAttribute>
+  </EnumType>
+
+  <!--
+    data.KindContent: EnumContent for data.Kind
+      - EnumValues with InternationalString
+  -->
+  <EnumContent className="data.KindContent"
+               mavenModule="test.module.data"
+               enumType="data.Kind">
+    <EnumValue>
+      <EnumAttributeValue>KIND_A</EnumAttributeValue>
+      <EnumAttributeValue>
+        <InternationalString defaultLocale="de">
+          <LocalizedString locale="de" text="Art A"/>
+          <LocalizedString locale="en" text="Kind A"/>
+        </InternationalString>
+      </EnumAttributeValue>
+      <EnumAttributeValue>A</EnumAttributeValue>
+    </EnumValue>
+    <EnumValue>
+      <EnumAttributeValue>KIND_B</EnumAttributeValue>
+      <EnumAttributeValue>
+        <InternationalString defaultLocale="de">
+          <LocalizedString locale="de" text="Art B"/>
+          <LocalizedString locale="en" text="Kind B"/>
+        </InternationalString>
+      </EnumAttributeValue>
+      <EnumAttributeValue>B</EnumAttributeValue>
+    </EnumValue>
+  </EnumContent>
+
+  <!--
+    data.RateTable: TableStructure
+      - Column key (String)
+      - Column rate (Decimal)
+      - Column statusRef (data.Status) — enum association: target present in model
+  -->
+  <TableStructure className="data.RateTable"
+                  mavenModule="test.module.data">
+    <Description locale="de">Tabelle mit Tarifsätzen pro Schlüssel.</Description>
+    <Description locale="en">Table with rate values per key.</Description>
+    <Column datatype="String" name="key">
+      <Description locale="de">Schlüssel für den Tarifsatz.</Description>
+      <Description locale="en">Key for the rate entry.</Description>
+    </Column>
+    <Column datatype="Decimal" name="rate">
+      <Description locale="de">Der Tarifsatz als Dezimalwert.</Description>
+      <Description locale="en">The rate as a decimal value.</Description>
+    </Column>
+    <Column datatype="data.Status" name="statusRef">
+      <Description locale="de">Referenz auf den Status (Enum-Assoziation).</Description>
+      <Description locale="en">Reference to status (enum association).</Description>
+    </Column>
+  </TableStructure>
+
+</collection>

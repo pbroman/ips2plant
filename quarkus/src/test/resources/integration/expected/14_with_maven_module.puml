@@ -1,0 +1,25 @@
+@startuml
+hide empty members
+abstract class Alpha<<PolicyCmptType>> { 
+  test.module.policy
+  --
+  +status: String
+  ~derivedValue: Integer
+  #computedAmount: Decimal
+  -TYPE_CODE: String
+}
+Alpha *-- Beta
+Delta <-- Alpha
+class Beta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  test.module.policy
+  --
+  +statusKind: data.Status
+  +unknownRef: data.UnknownEnum
+}
+Alpha <|-- Beta
+class Delta<<(V,lightSteelBlue)PolicyCmptType>> { 
+  test.module.coverage
+  --
+  +coverageId: String
+}
+@enduml
