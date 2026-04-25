@@ -348,16 +348,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
                 } 
             }
         });
-        packageFilterField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { /* no-op */ }
-            @Override public void changedUpdate(DocumentEvent e) { /* no-op */ }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                if (packageFilterField.getText().isEmpty()) {
-                    generationManager.scheduleRegeneration();
-                }
-            }
-        });
 
         connectorLengthSpinner.addChangeListener(e -> generationManager.scheduleRegeneration());
 
