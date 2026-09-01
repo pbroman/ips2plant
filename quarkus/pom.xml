@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.pbroman</groupId>
     <artifactId>ips2plant-quarkus</artifactId>
-    <version>0.4.2</version>
+    <version>0.4.4</version>
 
     <properties>
         <compiler-plugin.version>3.15.0</compiler-plugin.version>
@@ -13,9 +13,9 @@
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <skipITs>true</skipITs>
-        <quarkus.platform.version>3.34.3</quarkus.platform.version>
+        <quarkus.platform.version>3.39.1</quarkus.platform.version>
         <surefire-plugin.version>3.5.5</surefire-plugin.version>
-        <saxon-he.version>12.9</saxon-he.version>
+        <saxon-he.version>13.0</saxon-he.version>
     </properties>
 
     <dependencyManagement>

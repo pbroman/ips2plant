@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.pbroman"
-version = "0.4.2"
+version = "0.4.4"
 
 repositories {
     mavenCentral()
@@ -22,7 +22,7 @@ dependencies {
             intellijIdeaCommunity("2024.1")
         }
     }
-    implementation("net.sf.saxon:Saxon-HE:12.9")
+    implementation("net.sf.saxon:Saxon-HE:13.0")
 
     testImplementation(platform("org.junit:junit-bom:5.14.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -32,8 +32,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // Running tests loads IntelliJ Platform runtime classes from the local IDE, which may be
+    // built for a newer class file version than the project's Java 21 target (see compileJava).
     javaLauncher.set(javaToolchains.launcherFor {
-        languageVersion.set(JavaLanguageVersion.of(21))
+        languageVersion.set(JavaLanguageVersion.of(25))
     })
 }
 
@@ -83,7 +85,18 @@ tasks {
     jarSearchableOptions {
         enabled = false
     }
+    buildSearchableOptions {
+        enabled = false
+    }
     compileJava {
         options.compilerArgs.add("-Xlint:deprecation")
+    }
+    // Toolbox auto-updates the local IDE in place, so its bundled platform jars may require a
+    // newer class file version than the project's Java 21 target. Use a newer compiler to read
+    // them while still emitting Java 21 bytecode.
+    withType<JavaCompile>().configureEach {
+        javaCompiler.set(project.javaToolchains.compilerFor {
+            languageVersion.set(JavaLanguageVersion.of(25))
+        })
     }
 }

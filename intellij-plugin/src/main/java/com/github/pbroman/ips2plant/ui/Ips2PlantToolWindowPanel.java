@@ -18,8 +18,6 @@ import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
@@ -211,18 +209,6 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         var searchInputPanel = new JPanel(new BorderLayout(4, 0));
         searchField.addActionListener(e -> searchManager.runSearch(searchField.getText().trim()));
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override public void insertUpdate(DocumentEvent e) { /* no-op */ }
-            @Override public void changedUpdate(DocumentEvent e) { /* no-op */ }
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                if (searchField.getText().isEmpty()) {
-                    generationState.deactivateSearch();
-                    searchManager.clearSearchResults();
-                    GenerationManager.openInEditor(project, GenerationManager.EMPTY_PUML);
-                }
-            }
-        });
         searchInputPanel.add(searchField, BorderLayout.CENTER);
         var searchButton = withTooltip(new JButton(LABEL_SEARCH), TOOLTIP_SEARCH_BUTTON);
         searchButton.addActionListener(e -> searchManager.runSearch(searchField.getText().trim()));

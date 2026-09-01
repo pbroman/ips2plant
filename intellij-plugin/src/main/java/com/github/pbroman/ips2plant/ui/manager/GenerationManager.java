@@ -6,6 +6,7 @@ import com.github.pbroman.ips2plant.core.IpsClassSearcher;
 import com.github.pbroman.ips2plant.core.MavenModuleResolver;
 import com.github.pbroman.ips2plant.settings.Ips2PlantSettings;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -37,7 +38,7 @@ public class GenerationManager {
     public static void openInEditor(Project project, String pumlContent) {
         var existingFile = pumlFiles.get(project);
         if (existingFile != null) {
-            var document = FileDocumentManager.getInstance().getDocument(existingFile);
+            var document = ReadAction.computeBlocking(() -> FileDocumentManager.getInstance().getDocument(existingFile));
             if (document != null) {
                 WriteCommandAction.runWriteCommandAction(project, () ->
                         document.setText(pumlContent));
