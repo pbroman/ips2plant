@@ -1,6 +1,21 @@
 # IPS to PlantUML - IntelliJ Plugin
 
-An IntelliJ IDEA plugin that generates [PlantUML](https://plantuml.com/) class diagrams from [Faktor-IPS](https://github.com/faktorips) model files, directly inside your IDE.
+<!-- Plugin description -->
+Generates [PlantUML](https://plantuml.com/) class diagrams from [Faktor-IPS](https://github.com/faktorips) model files, directly inside your IDE.
+
+- Detects the Faktor-IPS model directories of the project and shows them in a tool window
+- Diagrams of whole model directories, of classes found by name search, or of a class tree starting at one policy
+  component type (descendants and/or ancestors, optionally with merged supertypes)
+- Includes model files from Maven dependencies (runs `mvn dependency:build-classpath`)
+- Policy and product component types, enum types and contents, table structures
+- Options for packages, cardinalities, descriptions, external supertypes and associations, package filter and more
+- Opens the result as a `.puml` file in the editor
+
+Requirements: a Maven installation for resolving dependencies. To render the diagram, install a PlantUML plugin such as
+[PlantUML Integration](https://plugins.jetbrains.com/plugin/7017-plantuml-integration).
+
+This is an independent project, not affiliated with Faktor Zehn or PlantUML.
+<!-- Plugin description end -->
 
 ## Supported IPS File Types
 
@@ -163,3 +178,14 @@ As shown in generated plantUml:
 cd intellij-plugin
 ./gradlew buildPlugin
 ```
+
+Before uploading to the JetBrains Marketplace, check binary compatibility with the recommended IDE versions
+(downloads several IDEs on the first run):
+
+```bash
+./gradlew verifyPlugin
+```
+
+The Marketplace description is taken from the section between the `Plugin description` markers at the top of this
+README, the change notes from the matching version section of [RELEASE_NOTES.md](../RELEASE_NOTES.md) (without the
+Quarkus CLI part).

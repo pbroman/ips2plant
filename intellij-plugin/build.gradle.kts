@@ -1,6 +1,10 @@
+import org.jetbrains.changelog.markdownToHTML
+
 plugins {
     id("java")
     id("org.jetbrains.intellij.platform") version "2.20.1"
+    // only for markdownToHTML (description and change notes); the changelog tasks are not used
+    id("org.jetbrains.changelog") version "2.5.0" apply false
 }
 
 group = "com.github.pbroman"
@@ -52,23 +56,56 @@ intellijPlatform {
         id = "com.github.pbroman.ips2plant"
         name = "IPS to PlantUML"
         version = project.version.toString()
-        description = """
-            Generates PlantUML class diagrams from Faktor-IPS model files (.ipspolicycmpttype, .ipsproductcmpttype, .ipsenumtype, .ipsenumcontent, .ipstablestructure).
-            <br/>
-            <ul>
-                <li>Tool window with model directory tree, search, and diagram options</li>
-                <li>Resolve IPS model files from Maven dependency JARs</li>
-                <li>Opens result directly in the editor</li>
-            </ul>
-        """
+        description = providers.fileContents(layout.projectDirectory.file("README.md")).asText.map {
+            markdownToHTML(pluginDescription(it))
+        }
+        changeNotes = providers.fileContents(layout.projectDirectory.file("../RELEASE_NOTES.md")).asText.map {
+            markdownToHTML(pluginChangeNotes(it, project.version.toString()))
+        }
         vendor {
             name = "pbroman"
+            url = "https://github.com/pbroman"
         }
         ideaVersion {
             sinceBuild = "261"
             untilBuild = provider { null }
         }
     }
+
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
+}
+
+/** The part of the README between the plugin description markers; the build fails if they are missing. */
+fun pluginDescription(readme: String): String {
+    val start = "<!-- Plugin description -->"
+    val end = "<!-- Plugin description end -->"
+    require(readme.contains(start) && readme.contains(end)) { "README.md: plugin description markers missing" }
+    return readme.substringAfter(start).substringBefore(end).trim()
+}
+
+/**
+ * The section of the release notes for this version, without its heading and without subsections that only
+ * concern the Quarkus CLI. Falls back to a link if the version has no section yet.
+ */
+fun pluginChangeNotes(releaseNotes: String, version: String): String {
+    val link = "Full release notes: [RELEASE_NOTES.md](https://github.com/pbroman/ips2plant/blob/main/RELEASE_NOTES.md)"
+    val section = releaseNotes.lines()
+        .dropWhile { it.trim() != "## $version" && !it.startsWith("## $version ") }
+        .drop(1)
+        .takeWhile { !it.startsWith("## ") }
+        .joinToString("\n")
+    if (section.isBlank()) {
+        return link
+    }
+    val subsections = ("\n" + section).split("\n### ")
+    val kept = subsections.drop(1)
+        .filterNot { it.startsWith("Quarkus CLI") }
+        .joinToString("\n\n") { "### " + it.trim() }
+    return (subsections[0].trim() + "\n\n" + kept).trim() + "\n\n" + link
 }
 
 tasks {

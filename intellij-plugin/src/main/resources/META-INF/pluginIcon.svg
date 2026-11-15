@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">
+  <!-- parent class -->
+  <rect x="11.5" y="2.5" width="17" height="13" rx="1.5" fill="#FFFFFF" stroke="#2B3A42"/>
+  <path d="M11.5 4a1.5 1.5 0 0 1 1.5-1.5h14a1.5 1.5 0 0 1 1.5 1.5v3.5h-17z" fill="#6A4C9C" stroke="#2B3A42"/>
+  <path d="M14 10.5h12M14 13h8" stroke="#9AA5AB" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- inheritance: hollow triangle on the parent, branching to both subclasses -->
+  <path d="M20 21.5v-1.5M9.5 26v-4.5h21v4.5" fill="none" stroke="#2B3A42" stroke-width="1.2"/>
+  <path d="M20 16l-3.5 4.5h7z" fill="#FFFFFF" stroke="#2B3A42" stroke-width="1.2" stroke-linejoin="round"/>
+  <!-- subclasses -->
+  <rect x="2.5" y="26" width="14" height="11.5" rx="1.5" fill="#FFFFFF" stroke="#2B3A42"/>
+  <path d="M2.5 27.5a1.5 1.5 0 0 1 1.5-1.5h11a1.5 1.5 0 0 1 1.5 1.5v3h-14z" fill="#009FE3" stroke="#2B3A42"/>
+  <path d="M5 34.5h9" stroke="#9AA5AB" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="23.5" y="26" width="14" height="11.5" rx="1.5" fill="#FFFFFF" stroke="#2B3A42"/>
+  <path d="M23.5 27.5a1.5 1.5 0 0 1 1.5-1.5h11a1.5 1.5 0 0 1 1.5 1.5v3h-14z" fill="#009FE3" stroke="#2B3A42"/>
+  <path d="M26 34.5h9" stroke="#9AA5AB" stroke-width="1.2" stroke-linecap="round"/>
+</svg>
