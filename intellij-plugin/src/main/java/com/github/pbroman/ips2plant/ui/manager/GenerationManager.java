@@ -99,7 +99,9 @@ public class GenerationManager {
             }
             LOG.info("runGeneration: generating from " + selectedTreeFiles.size() + " tree results");
             options.setHighlightClass(treeSearchManager.getRoot());
-            generateFromFiles(selectedTreeFiles, options, false, false, treeSearchManager.isMergeSupertypes());
+            // without merging, the supertype chain is drawn as separate classes, so its files must be in the collection
+            boolean merge = treeSearchManager.isMergeSupertypes();
+            generateFromFiles(selectedTreeFiles, options, !merge, false, merge);
         } else if (!searchManager.getSearchResults().isEmpty()) {
             // Search is active — only generate from selected results, never fall back to directories
             if (selectedSearchFiles.isEmpty()) {
