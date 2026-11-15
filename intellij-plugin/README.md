@@ -65,6 +65,31 @@ The search searches all selected model directories, including selected dependenc
 
 **Add Referencing Classes**: Adds all classes that directly reference any of the found classes through associations (composition, association, aggregation). Like supertypes, these are only included in the diagram, not in the search result list.
 
+### Tree
+
+The **Tree** tab (next to **Search**) builds a diagram around one root policy component type: everything reachable from it, everything that reaches it, or both.
+
+1. Enter the root class in the **Root:** field (simple or fully qualified name, case-insensitive; if a simple name is ambiguous, use the fully qualified one)
+2. Choose **Descendants** (classes reachable from the root through composition, association and aggregation) and/or **Ancestors** (classes that reach the root)
+3. Optionally limit the **Depth**, counted in association hops (empty = unlimited; supertype hops cost nothing)
+4. Press **Enter** or click **Build**; the diagram is generated for everything found. The status line shows the number of classes and any warnings
+
+The root class is drawn with a bold red border.
+
+| Option             | Default | Description                                                                                         |
+|--------------------|---------|-----------------------------------------------------------------------------------------------------|
+| Descendants        | ✓       | Adds everything reachable from the root                                                             |
+| Ancestors          |         | Adds everything that reaches the root                                                               |
+| Depth              | empty   | Maximum number of association hops                                                                  |
+| Merge supertypes   | ✓       | Shows inherited attributes and associations inside each class instead of separate supertype classes |
+| Include abstract   |         | Also shows paths that end in abstract classes                                                       |
+
+**Scope and classpath**: only classes in the selected model directories become part of the diagram, and the walk is limited to the Maven dependencies (compile/provided) of the root's module, read from the `pom.xml` files. Without this, unrelated lines of business would leak in through abstract types. Maven-transitive dependencies of dependency JARs are not followed. Run **Resolve Dependencies** first if a supertype comes from a JAR; otherwise the status line lists the unresolved supertypes.
+
+**Merge supertypes**: inherited attributes are listed below a dotted line in each class, and inherited associations are drawn from the class itself with a grey arrow. Supertypes are inherited from every model directory visible on the classpath, not only the selected ones. A supertype class is shown only if another class in the diagram has an arrow to it. An association to an abstract class is drawn to its concrete subtypes in the diagram instead, unless **Include abstract** is on. Associations to a concrete class stay on that class, even if it has subtypes.
+
+**Abstract classes**: an abstract class without a concrete subtype in the selected directories is a dead end. Nothing is followed through it unless **Include abstract** is on.
+
 ### Diagram Options
 
 | Option                  | Default | Description                                                                     |

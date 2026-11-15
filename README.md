@@ -14,7 +14,7 @@ Three implementations are available:
 
 ## IntelliJ Plugin
 
-See [`intellij-plugin/README.md`](intellij-plugin/README.md) for full documentation.
+See [`intellij-plugin/README.md`](intellij-plugin/README.md) for full documentation. Besides directory-based generation and name search, the plugin has a **Tree** tab that draws everything reachable from (or leading to) one root class.
 
 ---
 

@@ -35,12 +35,31 @@
                 <xsl:if test="@abstract='true'">
                     <xsl:text>abstract </xsl:text>
                 </xsl:if>
-                <xsl:value-of select="concat('class ', $className, $classType, ' { &#xa;')"/>
+                <xsl:value-of select="concat('class ', $className, $classType)"/>
+                <xsl:if test="$highlightClass != '' and $classNameWithPackage = $highlightClass">
+                    <xsl:text> #line:red;line.bold</xsl:text>
+                </xsl:if>
+                <xsl:text> { &#xa;</xsl:text>
                 <xsl:if test="$showMavenModule = 'true' and @mavenModule">
                     <xsl:value-of select="concat('  ', @mavenModule, '&#xa;')"/>
                     <xsl:text>  --&#xa;</xsl:text>
                 </xsl:if>
-                <xsl:for-each select="Attribute">
+                <xsl:for-each select="Attribute[not(@inherited = 'true')]">
+                    <xsl:sort select="if ($sortAttributesAlphabetically = 'true') then @name else ''"/>
+                    <xsl:variable name="attrType">
+                        <xsl:choose>
+                            <xsl:when test="@attributeType='changeable'">+</xsl:when>
+                            <xsl:when test="@attributeType='derived'">~</xsl:when>
+                            <xsl:when test="@attributeType='computed'">#</xsl:when>
+                            <xsl:when test="@attributeType='constant'">-</xsl:when>
+                        </xsl:choose>
+                    </xsl:variable>
+                    <xsl:value-of select="concat('  ', $attrType, @name, ': ', @datatype, '&#xa;')"/>
+                </xsl:for-each>
+                <xsl:if test="Attribute[@inherited = 'true']">
+                    <xsl:text>  ..&#xa;</xsl:text>
+                </xsl:if>
+                <xsl:for-each select="Attribute[@inherited = 'true']">
                     <xsl:sort select="if ($sortAttributesAlphabetically = 'true') then @name else ''"/>
                     <xsl:variable name="attrType">
                         <xsl:choose>

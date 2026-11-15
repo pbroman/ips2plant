@@ -69,6 +69,7 @@
                     <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
                 </xsl:if>
                 <xsl:value-of select="$target"/>
+                <xsl:if test="@inherited = 'true'"><xsl:text> #line:grey</xsl:text></xsl:if>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
@@ -97,6 +98,7 @@
                     <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
                 </xsl:if>
                 <xsl:value-of select="$className"/>
+                <xsl:if test="@inherited = 'true'"><xsl:text> #line:grey</xsl:text></xsl:if>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>
@@ -124,6 +126,7 @@
                     <xsl:value-of select="concat('&quot;', @minCardinality, '..', @maxCardinality, '&quot; ')"/>
                 </xsl:if>
                 <xsl:value-of select="f:class-name(@target)"/>
+                <xsl:if test="@inherited = 'true'"><xsl:text> #line:grey</xsl:text></xsl:if>
                 <xsl:call-template name="target-role-label"/>
                 <xsl:text>&#xa;</xsl:text>
             </xsl:if>

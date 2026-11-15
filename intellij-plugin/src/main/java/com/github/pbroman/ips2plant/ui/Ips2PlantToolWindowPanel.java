@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import java.awt.event.FocusAdapter;
@@ -28,6 +29,7 @@ import com.github.pbroman.ips2plant.ui.manager.GenerationManager;
 import com.github.pbroman.ips2plant.ui.manager.GenerationStateManager;
 import com.github.pbroman.ips2plant.ui.manager.ModelDirTreeManager;
 import com.github.pbroman.ips2plant.ui.manager.SearchManager;
+import com.github.pbroman.ips2plant.ui.manager.TreeSearchManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.MessageType;
@@ -40,6 +42,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TITLE_MODEL_DIRECTORIES = "Model Directories";
     private static final String TITLE_OPTIONS = "Options";
     private static final String TITLE_SEARCH = "Search";
+    private static final String TITLE_TREE = "Tree";
     private static final String LABEL_PACKAGES = "Packages";
     private static final String LABEL_PRINT_TARGET_ROLE = "Target Roles";
     private static final String LABEL_EXTERNAL_SUPERTYPES = "External Supertypes";
@@ -99,6 +102,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private final ModelDirTreeManager treeManager;
     private final DependencyManager depManager;
     private final SearchManager searchManager;
+    private final TreeSearchManager treeSearchManager;
     private final GenerationManager generationManager;
 
     // Search UI (panel-owned)
@@ -135,11 +139,14 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         treeManager = new ModelDirTreeManager(project);
         depManager = new DependencyManager(project, treeManager);
         searchManager = new SearchManager(project, treeManager, generationState);
-        generationManager = new GenerationManager(project, searchManager, treeManager, depManager, generationState, this::getOptions);
+        treeSearchManager = new TreeSearchManager(project, treeManager, depManager, generationState);
+        generationManager = new GenerationManager(project, searchManager, treeSearchManager, treeManager, depManager, generationState, this::getOptions);
 
         treeManager.setOnNodeStateChanged(() -> {
             if (Ips2PlantSettings.getInstance().retriggerOnDirChange) {
-                if (generationState.isSearchActive()) {
+                if (generationState.isTreeActive()) {
+                    treeSearchManager.run();
+                } else if (generationState.isSearchActive()) {
                     searchManager.runSearch(searchField.getText().trim());
                 } else {
                     generationManager.scheduleRegeneration();
@@ -149,6 +156,12 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchManager.setOnResultsUpdated(generationManager::runGeneration);
         searchManager.setOnOptionsReset(() -> resetOptions(allOptionChecks));
         searchManager.setOnOptionsAutoEnabled(this::autoEnableOptionsForResults);
+        treeSearchManager.setOnResultsUpdated(generationManager::runGeneration);
+        treeSearchManager.setOnOptionsAutoEnabled(this::autoEnableOptionsForResults);
+        treeSearchManager.setOnBeforeRun(() -> {
+            searchField.setText("");
+            searchManager.clearSearchResults();
+        });
 
         setPreferredSize(new Dimension(PREFERRED_WIDTH, 600));
         buildUi();
@@ -175,6 +188,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         generateButton.addActionListener(e -> {
             searchField.setText("");
             searchManager.clearSearchResults();
+            treeSearchManager.clear();
             if (Ips2PlantSettings.getInstance().generateResetsOptions) {
                 resetOptions(allOptionChecks);
             }
@@ -205,7 +219,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
 
         // --- Middle: Search section ---
         var searchSection = new JPanel(new BorderLayout(0, 2));
-        searchSection.setBorder(BorderFactory.createTitledBorder(TITLE_SEARCH));
+        searchSection.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
         var searchInputPanel = new JPanel(new BorderLayout(4, 0));
         searchField.addActionListener(e -> searchManager.runSearch(searchField.getText().trim()));
@@ -230,6 +244,11 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         searchBottomPanel.add(searchManager.getSelectAllButton(), sgbc);
         searchSection.add(searchBottomPanel, BorderLayout.SOUTH);
         searchSection.setMinimumSize(new Dimension(0, 80));
+
+        var tabs = new JTabbedPane();
+        tabs.addTab(TITLE_SEARCH, searchSection);
+        tabs.addTab(TITLE_TREE, treeSearchManager.getPanel());
+        tabs.setMinimumSize(new Dimension(0, 80));
 
         // --- Bottom: Options ---
         allOptionChecks = new JCheckBox[]{ packagesCheck, printTargetRoleCheck, addSuperTypeCheck, addAssociationsCheck,
@@ -305,7 +324,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         optionsScrollPane.setMinimumSize(new Dimension(0, 80));
 
         // --- Split panes ---
-        var bottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, searchSection, optionsScrollPane);
+        var bottomSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabs, optionsScrollPane);
         bottomSplit.setResizeWeight(0.5);
         bottomSplit.setDividerSize(6);
         bottomSplit.setContinuousLayout(true);
@@ -383,6 +402,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         treeManager.uncheckAll();
         searchField.setText("");
         searchManager.clearSearchResults();
+        treeSearchManager.clear();
         searchManager.resetSearchOptions();
         resetOptions(allOptionChecks);
         GenerationManager.openInEditor(project, GenerationManager.EMPTY_PUML);

@@ -231,4 +231,47 @@ class GenerationStateManagerTest {
         state.reset();
         assertThat(state.shouldRegenerate()).isFalse();
     }
+
+    // --- tree mode ---
+
+    @Test
+    void activateTree_setsTreeActiveAndClearsOtherModes() {
+        // given
+        state.activateSearch();
+
+        // when
+        state.activateTree();
+
+        // then
+        assertThat(state.isTreeActive()).isTrue();
+        assertThat(state.isSearchActive()).isFalse();
+        assertThat(state.isModelGenerationActive()).isFalse();
+        assertThat(state.shouldRegenerate()).isTrue();
+    }
+
+    @Test
+    void activateSearchAndModelGeneration_clearTreeActive() {
+        // given
+        state.activateTree();
+
+        // when / then
+        state.activateSearch();
+        assertThat(state.isTreeActive()).isFalse();
+        state.activateTree();
+        state.activateModelGeneration();
+        assertThat(state.isTreeActive()).isFalse();
+    }
+
+    @Test
+    void reset_clearsTreeActive() {
+        // given
+        state.activateTree();
+
+        // when
+        state.reset();
+
+        // then
+        assertThat(state.isTreeActive()).isFalse();
+        assertThat(state.shouldRegenerate()).isFalse();
+    }
 }

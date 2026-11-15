@@ -136,6 +136,81 @@ public class XslIntegrationTest extends AbstractTest {
         );
     }
 
+    @Test
+    void xsl_inheritedMembers_areShownBelowDottedLineAndInheritedArrowsAreGrey() throws Exception {
+        // given
+        var collection = tempDir.resolve("inherited-collection.xml");
+        Files.writeString(collection, """
+                <collection>
+                  <PolicyCmptType className="a.Child">
+                    <Attribute name="own" datatype="String" attributeType="changeable"/>
+                    <Attribute name="fromBase" datatype="Integer" attributeType="changeable" inherited="true"/>
+                    <Association associationType="comp" target="a.Part" minCardinality="0" maxCardinality="*"
+                                 targetRoleSingular="Part" inherited="true"/>
+                    <Association associationType="comp" target="a.Own" minCardinality="0" maxCardinality="1"
+                                 targetRoleSingular="Own"/>
+                  </PolicyCmptType>
+                  <PolicyCmptType className="a.Part"><Description locale="en">part</Description></PolicyCmptType>
+                  <PolicyCmptType className="a.Own"><Description locale="en">own</Description></PolicyCmptType>
+                </collection>
+                """);
+        var xsl = getResourceFile("xsl/ips2plant.xsl").toPath();
+        var output = tempDir.resolve("inherited.puml");
+
+        // when
+        processor.process(xsl, collection, output, withBase());
+
+        // then
+        var puml = Files.readString(output);
+        assertThat(puml).containsSubsequence("+own: String", "  ..", "+fromBase: Integer");
+        assertThat(puml).contains("Child *-- Part #line:grey");
+        assertThat(puml).doesNotContain("Child *-- Own #line:grey");
+    }
+
+    @Test
+    void xsl_highlightClass_marksOnlyThatClassWithBoldRedBorder() throws Exception {
+        // given
+        var collection = tempDir.resolve("highlight-collection.xml");
+        Files.writeString(collection, """
+                <collection>
+                  <PolicyCmptType className="a.Root"/>
+                  <PolicyCmptType className="a.Other"/>
+                </collection>
+                """);
+        var xsl = getResourceFile("xsl/ips2plant.xsl").toPath();
+        var output = tempDir.resolve("highlight.puml");
+
+        // when
+        processor.process(xsl, collection, output, withBase("highlightClass", "a.Root"));
+
+        // then
+        var puml = Files.readString(output);
+        assertThat(puml).containsPattern("class Root\\S* #line:red;line.bold \\{");
+        assertThat(puml).doesNotContain("class Other #line");
+        assertThat(puml.split("#line:red")).hasSize(2);
+    }
+
+    @Test
+    void xsl_onlyInheritedAttributes_stillShowsDottedLineFirst() throws Exception {
+        // given
+        var collection = tempDir.resolve("only-inherited-collection.xml");
+        Files.writeString(collection, """
+                <collection>
+                  <PolicyCmptType className="a.Child">
+                    <Attribute name="fromBase" datatype="Integer" attributeType="changeable" inherited="true"/>
+                  </PolicyCmptType>
+                </collection>
+                """);
+        var xsl = getResourceFile("xsl/ips2plant.xsl").toPath();
+        var output = tempDir.resolve("only-inherited.puml");
+
+        // when
+        processor.process(xsl, collection, output, withBase());
+
+        // then
+        assertThat(Files.readString(output)).containsSubsequence("  ..", "+fromBase: Integer");
+    }
+
     // -------------------------------------------------------------------------
     // Snapshot regeneration (run manually after intentional behaviour changes)
     // -------------------------------------------------------------------------

@@ -3,6 +3,8 @@ package com.github.pbroman.ips2plant.ui.manager;
 import com.github.pbroman.ips2plant.core.Ips2PlantGenerator;
 import com.github.pbroman.ips2plant.core.Ips2PlantOptions;
 import com.github.pbroman.ips2plant.core.IpsClassSearcher;
+import com.github.pbroman.ips2plant.core.IpsFileCollector;
+import com.github.pbroman.ips2plant.core.IpsSupertypeMerger;
 import com.github.pbroman.ips2plant.core.MavenModuleResolver;
 import com.github.pbroman.ips2plant.settings.Ips2PlantSettings;
 import com.intellij.openapi.application.ApplicationManager;
@@ -19,7 +21,11 @@ import com.intellij.testFramework.LightVirtualFile;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.Timer;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,6 +59,7 @@ public class GenerationManager {
 
     private final Project project;
     private final SearchManager searchManager;
+    private final TreeSearchManager treeSearchManager;
     private final ModelDirTreeManager treeManager;
     private final DependencyManager depManager;
     private final GenerationStateManager generationState;
@@ -60,10 +67,11 @@ public class GenerationManager {
     private final Timer regenerateTimer;
 
     public GenerationManager(Project project, SearchManager searchManager,
-                             ModelDirTreeManager treeManager, DependencyManager depManager,
+                             TreeSearchManager treeSearchManager, ModelDirTreeManager treeManager, DependencyManager depManager,
                              GenerationStateManager generationState, Supplier<Ips2PlantOptions> optionsSupplier) {
         this.project = project;
         this.searchManager = searchManager;
+        this.treeSearchManager = treeSearchManager;
         this.treeManager = treeManager;
         this.depManager = depManager;
         this.generationState = generationState;
@@ -82,7 +90,17 @@ public class GenerationManager {
         var selectedSearchFiles = searchManager.getSelectedSearchResults();
         var options = optionsSupplier.get();
 
-        if (!searchManager.getSearchResults().isEmpty()) {
+        if (generationState.isTreeActive() && !treeSearchManager.getResults().isEmpty()) {
+            var selectedTreeFiles = treeSearchManager.getSelectedResults();
+            if (selectedTreeFiles.isEmpty()) {
+                LOG.info("runGeneration: tree active but no results selected, clearing diagram");
+                GenerationManager.openInEditor(project, EMPTY_PUML);
+                return;
+            }
+            LOG.info("runGeneration: generating from " + selectedTreeFiles.size() + " tree results");
+            options.setHighlightClass(treeSearchManager.getRoot());
+            generateFromFiles(selectedTreeFiles, options, false, false, treeSearchManager.isMergeSupertypes());
+        } else if (!searchManager.getSearchResults().isEmpty()) {
             // Search is active — only generate from selected results, never fall back to directories
             if (selectedSearchFiles.isEmpty()) {
                 LOG.info("runGeneration: search active but no results selected, clearing diagram");
@@ -90,40 +108,8 @@ public class GenerationManager {
                 return;
             }
             LOG.info("runGeneration: generating from " + selectedSearchFiles.size() + " search results");
-            boolean expandSupertypes = searchManager.isAddSupertypes();
-            boolean expandReferencing = searchManager.isAddReferencing();
-            var allDirs = new ArrayList<>(treeManager.getAllLocalDirs());
-            allDirs.addAll(treeManager.getAllDependencyDirs());
-            var depModules = depManager.getDependencyMavenModules();
-            ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
-                @Override
-                public void run(@NotNull ProgressIndicator indicator) {
-                    indicator.setText(TASK_STATUS_COLLECTING);
-                    var ipsFiles = new LinkedHashMap<>(selectedSearchFiles);
-                    if (expandSupertypes) {
-                        indicator.setText("Adding supertypes...");
-                        var searcher = new IpsClassSearcher();
-                        ipsFiles = new LinkedHashMap<>(searcher.addSupertypes(ipsFiles, allDirs));
-                    }
-                    if (expandReferencing) {
-                        indicator.setText("Adding referencing classes...");
-                        var searcher = new IpsClassSearcher();
-                        ipsFiles = new LinkedHashMap<>(searcher.addReferencingClasses(ipsFiles, allDirs));
-                    }
-                    var generator = new Ips2PlantGenerator();
-                    Map<String, String> mavenModules = Map.of();
-                    if (options.isShowMavenModule()) {
-                        var resolver = new MavenModuleResolver();
-                        for (var depEntry : depModules.entrySet()) {
-                            resolver.registerModule(depEntry.getKey(), depEntry.getValue());
-                        }
-                        mavenModules = resolver.resolveAll(ipsFiles);
-                    }
-                    var pumlContent = generator.generate(ipsFiles, options, indicator::setText, mavenModules);
-                    ApplicationManager.getApplication().invokeLater(() ->
-                            GenerationManager.openInEditor(project, pumlContent));
-                }
-            });
+            generateFromFiles(selectedSearchFiles, options,
+                    searchManager.isAddSupertypes(), searchManager.isAddReferencing(), false);
         } else {
             // Generate from selected model directories
             var localDirs = treeManager.getSelectedLocalDirs();
@@ -154,6 +140,64 @@ public class GenerationManager {
                             GenerationManager.openInEditor(project, pumlContent));
                 }
             });
+        }
+    }
+
+    private void generateFromFiles(Map<String, java.io.File> selectedFiles, Ips2PlantOptions options,
+                                   boolean expandSupertypes, boolean expandReferencing, boolean mergeSupertypes) {
+        var allDirs = new ArrayList<>(treeManager.getAllLocalDirs());
+        allDirs.addAll(treeManager.getAllDependencyDirs());
+        var depModules = depManager.getDependencyMavenModules();
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, TASK_TITLE, false) {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                indicator.setText(TASK_STATUS_COLLECTING);
+                var ipsFiles = new LinkedHashMap<>(selectedFiles);
+                if (expandSupertypes) {
+                    indicator.setText("Adding supertypes...");
+                    var searcher = new IpsClassSearcher();
+                    ipsFiles = new LinkedHashMap<>(searcher.addSupertypes(ipsFiles, allDirs));
+                }
+                if (expandReferencing) {
+                    indicator.setText("Adding referencing classes...");
+                    var searcher = new IpsClassSearcher();
+                    ipsFiles = new LinkedHashMap<>(searcher.addReferencingClasses(ipsFiles, allDirs));
+                }
+                var generator = new Ips2PlantGenerator();
+                Map<String, String> mavenModules = Map.of();
+                if (options.isShowMavenModule()) {
+                    var resolver = new MavenModuleResolver();
+                    for (var depEntry : depModules.entrySet()) {
+                        resolver.registerModule(depEntry.getKey(), depEntry.getValue());
+                    }
+                    mavenModules = resolver.resolveAll(ipsFiles);
+                }
+                Path mergeDir = null;
+                try {
+                    if (mergeSupertypes) {
+                        indicator.setText("Merging supertypes...");
+                        mergeDir = Files.createTempDirectory("ips2plant-merge-");
+                        ipsFiles = new LinkedHashMap<>(new IpsSupertypeMerger()
+                                .merge(ipsFiles, new IpsFileCollector().collect(allDirs), mergeDir));
+                    }
+                    var pumlContent = generator.generate(ipsFiles, options, indicator::setText, mavenModules);
+                    ApplicationManager.getApplication().invokeLater(() ->
+                            GenerationManager.openInEditor(project, pumlContent));
+                } catch (IOException e) {
+                    LOG.error("Failed to merge supertypes", e);
+                } finally {
+                    deleteQuietly(mergeDir);
+                }
+            }
+        });
+    }
+
+    private static void deleteQuietly(Path dir) {
+        if (dir == null) return;
+        try (var stream = Files.walk(dir)) {
+            stream.sorted(Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+        } catch (IOException e) {
+            // best effort cleanup
         }
     }
 }

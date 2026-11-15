@@ -23,6 +23,7 @@ public class Ips2PlantOptions {
     private String descriptionLocale = "de";
     private String packageFilter = "";
     private int connectorLength = 2;
+    private String highlightClass = "";
 
     public Map<String, String> toXsltParams() {
         var params = new HashMap<String, String>();
@@ -48,10 +49,14 @@ public class Ips2PlantOptions {
         if (showCardinalities) params.put("showCardinalities", "true");
         if (sortAttributesAlphabetically) params.put("sortAttributesAlphabetically", "true");
         params.put("descriptionLocale", descriptionLocale);
+        if (!highlightClass.isBlank()) params.put("highlightClass", highlightClass);
         if (!packageFilter.isBlank()) params.put("packageFilter", packageFilter);
 
         return params;
     }
+
+    public String getHighlightClass() { return highlightClass; }
+    public void setHighlightClass(String highlightClass) { this.highlightClass = highlightClass == null ? "" : highlightClass; }
 
     public boolean isPackages() { return packages; }
     public void setPackages(boolean packages) { this.packages = packages; }
