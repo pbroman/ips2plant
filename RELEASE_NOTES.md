@@ -2,7 +2,7 @@
 
 Baseline is version 0.4.4; each entry describes only what the version adds.
 
-## 0.5.0 (unreleased)
+## 0.5.0
 
 ### IntelliJ plugin
 
