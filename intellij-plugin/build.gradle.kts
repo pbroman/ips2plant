@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.14.0"
+    id("org.jetbrains.intellij.platform") version "2.20.1"
 }
 
 group = "com.github.pbroman"
@@ -22,9 +22,9 @@ dependencies {
             intellijIdea("2026.1")
         }
     }
-    implementation("net.sf.saxon:Saxon-HE:13.0")
+    implementation("net.sf.saxon:Saxon-HE:13.1")
 
-    testImplementation(platform("org.junit:junit-bom:5.14.3"))
+    testImplementation(platform("org.junit:junit-bom:5.14.4"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.assertj:assertj-core:3.27.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -45,6 +45,9 @@ java {
 }
 
 intellijPlatform {
+    // Disables buildSearchableOptions, prepareJarSearchableOptions and jarSearchableOptions together
+    buildSearchableOptions = false
+
     pluginConfiguration {
         id = "com.github.pbroman.ips2plant"
         name = "IPS to PlantUML"
@@ -82,12 +85,6 @@ tasks {
         dependsOn("syncXsl")
     }
 
-    jarSearchableOptions {
-        enabled = false
-    }
-    buildSearchableOptions {
-        enabled = false
-    }
     compileJava {
         options.compilerArgs.add("-Xlint:deprecation")
     }

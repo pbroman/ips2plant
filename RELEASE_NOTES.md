@@ -29,3 +29,9 @@ Baseline is version 0.4.4; each entry describes only what the version adds.
 
 - `-pf` / `--package-filter` supports the new `!` and `*` entries (use single quotes in the shell).
   The Tree features are not yet available in the CLI.
+
+### Build and dependencies
+
+- IntelliJ plugin: requires IntelliJ IDEA 2026.1 or later (`sinceBuild` 261, was 241 / 2024.1).
+- Saxon-HE 13.1 (CLI and plugin), Quarkus 3.40.1.2, Maven 3.9.16 (wrapper).
+- Plugin build: IntelliJ Platform Gradle Plugin 2.20.1 (needs Gradle 9), JUnit 5.14.4.

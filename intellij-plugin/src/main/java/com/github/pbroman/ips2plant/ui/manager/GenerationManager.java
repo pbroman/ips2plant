@@ -12,7 +12,7 @@ import com.intellij.openapi.application.ReadAction;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.progress.ProgressIndicator;
 import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.progress.Task;
@@ -48,13 +48,13 @@ public class GenerationManager {
             if (document != null) {
                 WriteCommandAction.runWriteCommandAction(project, () ->
                         document.setText(pumlContent));
-                FileEditorManager.getInstance(project).openFile(existingFile, true);
+                new OpenFileDescriptor(project, existingFile).navigate(true);
                 return;
             }
         }
         var virtualFile = new LightVirtualFile("ips-model.puml", pumlContent);
         pumlFiles.put(project, virtualFile);
-        FileEditorManager.getInstance(project).openFile(virtualFile, true);
+        new OpenFileDescriptor(project, virtualFile).navigate(true);
     }
 
     private final Project project;
