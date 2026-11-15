@@ -129,6 +129,20 @@ public class IpsModelIndex {
         return chain;
     }
 
+    /**
+     * Supertypes referenced somewhere in the supertype chains of the given classes but missing from the index,
+     * e.g. because they live in an unresolved dependency. Checks the whole chain, not just the direct supertype.
+     */
+    public List<String> unresolvedSupertypes(java.util.Collection<String> fqns) {
+        return fqns.stream()
+                .map(this::supertypeChain)
+                .filter(chain -> !chain.isEmpty())
+                .map(chain -> chain.get(chain.size() - 1))
+                .filter(last -> !classes.containsKey(last))
+                .distinct()
+                .toList();
+    }
+
     /** Own associations plus those of the whole supertype chain; a re-declared role keeps the most specific one. */
     public List<OwnedAssoc> effectiveAssociations(String fqn) {
         var result = new LinkedHashMap<String, OwnedAssoc>();

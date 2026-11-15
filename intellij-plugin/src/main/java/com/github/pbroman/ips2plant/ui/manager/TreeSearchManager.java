@@ -184,11 +184,7 @@ public class TreeSearchManager {
                     return IpsModelIndex.build(allDirs, restricted);
                 }).orElse(fullIndex);
                 var walked = new IpsTreeWalker(index).walk(root.get(), descendants, ancestors, finalDepth, includeAbstract, merge);
-                var unresolved = walked.keySet().stream()
-                        .flatMap(fqn -> index.get(fqn).map(IpsModelIndex.ClassInfo::supertype).stream())
-                        .filter(s -> index.get(s).isEmpty())
-                        .distinct()
-                        .toList();
+                var unresolved = index.unresolvedSupertypes(walked.keySet());
                 String message = walked.size() + " classes" + classpathNote;
                 if (!unresolved.isEmpty()) {
                     LOG.info("tree run: unresolved supertypes " + unresolved);

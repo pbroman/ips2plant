@@ -100,6 +100,24 @@ class IpsModelIndexTest {
     }
 
     @Test
+    void unresolvedSupertypes_findsMissingTypeBeyondDirectSupertype() throws IOException {
+        // given
+        var d = dir("m");
+        write(d, "a.Leaf", "supertype=\"a.Mid\"");
+        write(d, "a.Mid", "supertype=\"ext.Base\"");
+        write(d, "a.Other", "supertype=\"ext.Base\"");
+        write(d, "a.Plain", "");
+        write(d, "a.X", "supertype=\"a.Y\"");
+        write(d, "a.Y", "supertype=\"a.X\"");
+
+        // when
+        var index = IpsModelIndex.build(List.of(d), List.of(d));
+
+        // then
+        assertThat(index.unresolvedSupertypes(List.of("a.Leaf", "a.Other", "a.Plain", "a.X"))).containsExactly("ext.Base");
+    }
+
+    @Test
     void subtypesOf_invertsSupertypeRelation() throws IOException {
         // given
         var d = dir("m");
