@@ -62,6 +62,8 @@ public class TreeSearchManager {
 
     private final Map<String, File> results = new LinkedHashMap<>();
     private volatile String resultRoot = "";
+    /** Depth text of the last started run, to rebuild on focus loss only when it changed. */
+    private String lastRunDepthText = "";
 
     private Runnable onResultsUpdated;
     private Runnable onBeforeRun;
@@ -114,6 +116,19 @@ public class TreeSearchManager {
         showStatus("", false);
     }
 
+    /** Clears the results, empties the root field and restores the tree options to their defaults. */
+    public void reset() {
+        clear();
+        resultRoot = "";
+        rootField.setText("");
+        depthField.setText("");
+        lastRunDepthText = "";
+        descendantsCheck.setSelected(true);
+        ancestorsCheck.setSelected(false);
+        includeAbstractCheck.setSelected(false);
+        mergeSupertypesCheck.setSelected(true);
+    }
+
     public void run() {
         var rootName = rootField.getText().trim();
         if (rootName.isEmpty()) {
@@ -124,6 +139,7 @@ public class TreeSearchManager {
             return;
         }
         Integer depth;
+        lastRunDepthText = depthField.getText().trim();
         try {
             depth = parseDepth(depthField.getText());
         } catch (NumberFormatException e) {
@@ -283,6 +299,14 @@ public class TreeSearchManager {
             cb.addActionListener(e -> rerunIfActive());
         }
         depthField.addActionListener(e -> run());
+        depthField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (!e.isTemporary() && !depthField.getText().trim().equals(lastRunDepthText)) {
+                    rerunIfActive();
+                }
+            }
+        });
     }
 
     private void rerunIfActive() {

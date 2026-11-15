@@ -93,7 +93,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_SEARCH_FIELD = "Search for IPS classes by name. Supports * wildcard (e.g. *Contract*) and regex (e.g. Contract|Policy, Policy.*Type). Emptying the field clears the search.";
     private static final String TOOLTIP_SEARCH_BUTTON = "Search for IPS classes matching the pattern";
     private static final String TOOLTIP_RESET_ALL_OPTIONS = "Reset all options to their defaults";
-    private static final String TOOLTIP_RESET_ALL = "Reset everything: model directory selection, search, search options, and all options to defaults; clears the diagram";
+    private static final String TOOLTIP_RESET_ALL = "Reset everything: model directory selection, search, search options, tree root and tree options, and all options to defaults; clears the diagram";
 
     private static final int PREFERRED_WIDTH = 350;
 
@@ -404,7 +404,7 @@ public class Ips2PlantToolWindowPanel extends JPanel {
         treeManager.uncheckAll();
         searchField.setText("");
         searchManager.clearSearchResults();
-        treeSearchManager.clear();
+        treeSearchManager.reset();
         searchManager.resetSearchOptions();
         resetOptions(allOptionChecks);
         GenerationManager.openInEditor(project, GenerationManager.EMPTY_PUML);

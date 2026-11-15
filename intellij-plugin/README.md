@@ -80,7 +80,7 @@ The root class is drawn with a bold red border.
 |--------------------|---------|-----------------------------------------------------------------------------------------------------|
 | Descendants        | ✓       | Adds everything reachable from the root                                                             |
 | Ancestors          |         | Adds everything that reaches the root                                                               |
-| Depth              | empty   | Maximum number of association hops                                                                  |
+| Depth              | empty   | Maximum number of association hops; applied on Enter or when the field loses focus                  |
 | Merge supertypes   | ✓       | Shows inherited attributes and associations inside each class instead of separate supertype classes |
 | Include abstract   |         | Also shows paths that end in abstract classes                                                       |
 
@@ -117,7 +117,7 @@ tie the inclusion wins; classes matching no entry are hidden. Examples: `coverag
 without `coverage.Foo…`; `*,!coverage,coverage.Foo` shows everything except coverage, but keeps `coverage.Foo…`.
 See the [root README](../README.md#package-filter) for more examples.
 
-**Select All** enables all option checkboxes at once (by default, Descriptions is excluded from Select All — see Settings). **Select None** turns them off. **Reset to Default** reverts the options to their initial state (Policy Components on, all others off, package filter cleared, connector length 2). **Reset All** unchecks all model directories, clears the search, resets all options to default, and clears the diagram.
+**Select All** enables all option checkboxes at once (by default, Descriptions is excluded from Select All — see Settings). **Select None** turns them off. **Reset to Default** reverts the options to their initial state (Policy Components on, all others off, package filter cleared, connector length 2). **Reset All** unchecks all model directories, clears the search, empties the Tree root and resets the Tree options (Descendants and Merge supertypes on, others off, depth empty), resets all options to default, and clears the diagram.
 
 ### Settings
 
