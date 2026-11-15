@@ -20,7 +20,12 @@ Baseline is version 0.4.4; each entry describes only what the version adds.
   associations get a grey line.
 - New stylesheet parameter `highlightClass` (fully qualified class name) draws that class with a bold red border.
   It is not yet available as a CLI flag.
+- **Package filter exclusions**: `!prefix` excludes classes, `*` includes everything (implicit if the filter has only
+  exclusions). The longest matching prefix decides, on a tie the inclusion wins, e.g. `coverage,!coverage.Foo` or
+  `*,!coverage,coverage.Foo`. Applies to the CLI (`-pf`) and the plugin's Package Filter field.
+- Empty entries in the package filter (e.g. a trailing comma in `policy,`) are now ignored; before, they matched every class.
 
 ### Quarkus CLI
 
-- No new options. The Tree features are not yet available in the CLI.
+- `-pf` / `--package-filter` supports the new `!` and `*` entries (use single quotes in the shell).
+  The Tree features are not yet available in the CLI.

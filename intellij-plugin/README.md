@@ -20,7 +20,7 @@ An IntelliJ IDEA plugin that generates [PlantUML](https://plantuml.com/) class d
 
 ### Prerequisites
 
-* IntelliJ IDEA 2024.1 or later
+* IntelliJ IDEA 2026.1 or later
 * Java 21+
 
 ## Usage
@@ -108,8 +108,14 @@ The root class is drawn with a bold red border.
 | Enum Associations       |         | Shows enum associations (including external enums)                              |
 | Descriptions            |         | Shows IPS description texts as PlantUML notes (language set in Settings)        |
 | Cardinalities           |         | Shows cardinalities on association arrows                                       |
-| Package Filter          |         | Limits the diagram to a specific package and its associations                   |
+| Package Filter          |         | Limits the diagram by package prefixes, comma-separated; `!` excludes, `*` includes all (see below) |
 | Connector Length        | 2       | Length of association connectors (visible only when enabled in Settings)        |
+
+**Package Filter**: each entry is a prefix of the fully qualified class name. `prefix` includes, `!prefix` excludes,
+`*` includes everything (added implicitly if there are only exclusions). The longest matching prefix decides; on a
+tie the inclusion wins; classes matching no entry are hidden. Examples: `coverage,!coverage.Foo` shows coverage
+without `coverage.Foo…`; `*,!coverage,coverage.Foo` shows everything except coverage, but keeps `coverage.Foo…`.
+See the [root README](../README.md#package-filter) for more examples.
 
 **Select All** enables all option checkboxes at once (by default, Descriptions is excluded from Select All — see Settings). **Select None** turns them off. **Reset to Default** reverts the options to their initial state (Policy Components on, all others off, package filter cleared, connector length 2). **Reset All** unchecks all model directories, clears the search, resets all options to default, and clears the diagram.
 

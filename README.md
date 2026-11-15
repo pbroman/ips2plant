@@ -61,7 +61,7 @@ For multiple model directories repeat `-p`:
 | `-d` | `--descriptions` | Show description texts as PlantUML notes                   |
 | `-c` | `--cardinalities` | Show cardinalities on association arrows                   |
 | `-lo` | `--locale` | Language for descriptions and enum content (default: `de`) |
-| `-pf` | `--package-filter` | Filter the diagram by packages (Comma separates list)      |
+| `-pf` | `--package-filter` | Filter the diagram by package prefixes, comma-separated; `!` excludes, `*` includes all (see [Package filter](#package-filter)) |
 | `-so` | `--sort-attr-alphabet` | Sort attributes alphabetically (default: model definition order) |
 | `-l` | `--connector-length` | Length of association connectors (default: 2)              |
 
@@ -74,6 +74,28 @@ For multiple model directories repeat `-p`:
   -k -r -s -pr -t -tu -et \
   -o output/diagram.puml
 ```
+
+### Package filter
+
+The package filter is a comma-separated list of prefixes, matched against the fully qualified class name:
+
+* `prefix` includes classes whose name starts with `prefix`
+* `!prefix` excludes them
+* `*` includes everything; it is added implicitly if the list contains only exclusions
+
+The longest matching prefix decides; if an inclusion and an exclusion are equally long, the inclusion wins.
+Classes that match no entry are hidden.
+
+| Filter | Shows |
+|--------|-------|
+| `coverage` | only `coverage…` classes |
+| `coverage,!coverage.Foo` | `coverage…` classes except `coverage.Foo…` |
+| `!coverage,coverage.Foo` | only `coverage.Foo…` classes |
+| `*,!coverage,coverage.Foo` | everything except `coverage…`, but including `coverage.Foo…` |
+| `!coverage` | everything except `coverage…` |
+
+On the command line, use single quotes: bash expands an unquoted `*`, and `!` inside double quotes triggers
+history expansion, e.g. `-pf '*,!coverage,coverage.Foo'`.
 
 ---
 

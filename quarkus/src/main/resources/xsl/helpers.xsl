@@ -2,24 +2,39 @@
 <xsl:stylesheet version="2.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:f="urn:ips2plant:functions">
 
-    <!-- Checks if a class name matches the package filter (comma-separated list) -->
+    <!--
+        Checks if a class name matches the package filter (comma-separated list of prefixes).
+        - "prefix"  includes classes whose name starts with prefix
+        - "!prefix" excludes them
+        - "*"       includes everything (empty prefix); added implicitly if the list has no include entry
+        The longest matching prefix decides; on a tie the include wins. No matching entry = hidden.
+    -->
     <xsl:function name="f:matches-package-filter" as="xs:boolean"
                   xmlns:xs="http://www.w3.org/2001/XMLSchema">
         <xsl:param name="classNameWithPackage" as="xs:string"/>
         <xsl:param name="filters" as="xs:string"/>
+        <xsl:variable name="given" select="(for $t in tokenize($filters, ',') return normalize-space($t))[. != '']"/>
+        <xsl:variable name="hasInclude" select="some $e in $given satisfies not(starts-with($e, '!'))"/>
+        <xsl:variable name="entries" select="if ($hasInclude) then $given else ($given, '*')"/>
+        <xsl:variable name="matching" select="$entries[starts-with($classNameWithPackage, f:filter-prefix(.))]"/>
         <xsl:choose>
-            <xsl:when test="$filters = ''"><xsl:sequence select="true()"/></xsl:when>
-            <xsl:when test="contains($filters, ',')">
-                <xsl:sequence select="
-                    if (starts-with($classNameWithPackage, normalize-space(substring-before($filters, ','))))
-                    then true()
-                    else f:matches-package-filter($classNameWithPackage, substring-after($filters, ','))
-                "/>
-            </xsl:when>
+            <xsl:when test="empty($given)"><xsl:sequence select="true()"/></xsl:when>
+            <xsl:when test="empty($matching)"><xsl:sequence select="false()"/></xsl:when>
             <xsl:otherwise>
-                <xsl:sequence select="starts-with($classNameWithPackage, normalize-space($filters))"/>
+                <xsl:variable name="maxLen"
+                              select="max(for $m in $matching return string-length(f:filter-prefix($m)))"/>
+                <xsl:sequence select="some $m in $matching satisfies
+                        (not(starts-with($m, '!')) and string-length(f:filter-prefix($m)) = $maxLen)"/>
             </xsl:otherwise>
         </xsl:choose>
+    </xsl:function>
+
+    <!-- Prefix of a package filter entry: leading '!' stripped, '*' is the empty prefix -->
+    <xsl:function name="f:filter-prefix" as="xs:string"
+                  xmlns:xs="http://www.w3.org/2001/XMLSchema">
+        <xsl:param name="entry" as="xs:string"/>
+        <xsl:variable name="prefix" select="replace($entry, '^!', '')"/>
+        <xsl:sequence select="if ($prefix = '*') then '' else $prefix"/>
     </xsl:function>
 
     <!-- Convenience overload using the global $packageFilter param -->

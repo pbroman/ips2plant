@@ -132,7 +132,20 @@ public class XslIntegrationTest extends AbstractTest {
                                 "showMavenModule", "true",
                                 "showDescriptions", "true",
                                 "descriptionLocale", "de",
-                                "sortAttributesAlphabetically", "true"))
+                                "sortAttributesAlphabetically", "true")),
+
+                // Package filter exclusions: the longest matching prefix wins, on a tie the include wins
+                scenario("21_package_filter_exclude_longer",
+                        withBase("packageFilter", "policy,!policy.Beta")),
+
+                scenario("22_package_filter_exclude_only",
+                        withBase("packageFilter", "!policy")),
+
+                scenario("23_package_filter_tie_include_wins",
+                        withBase("packageFilter", "policy,!policy")),
+
+                scenario("24_package_filter_star",
+                        withBase("packageFilter", "*,!policy,policy.Beta"))
         );
     }
 

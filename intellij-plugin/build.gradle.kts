@@ -19,7 +19,7 @@ dependencies {
         if (localIde != null) {
             local(localIde)
         } else {
-            intellijIdeaCommunity("2024.1")
+            intellijIdea("2026.1")
         }
     }
     implementation("net.sf.saxon:Saxon-HE:13.0")
@@ -62,7 +62,7 @@ intellijPlatform {
             name = "pbroman"
         }
         ideaVersion {
-            sinceBuild = "241"
+            sinceBuild = "261"
             untilBuild = provider { null }
         }
     }

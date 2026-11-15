@@ -39,7 +39,8 @@ public class Ips2PlantCommand implements Callable<Integer> {
 
     // This might not be the best way to do it, but it works. :)
 
-    @Option(names = {"-pf", "--package-filter"}, description = "Filter the diagram to a package and it's associations")
+    @Option(names = {"-pf", "--package-filter"}, description = "Filter the diagram by package prefixes (comma-separated). '!prefix' excludes, '*' includes all; "
+            + "the longest matching prefix wins, on a tie the inclusion. Use single quotes, e.g. '*,!coverage,coverage.Foo'")
     private void setPackageFilter(String option) {
         xsltParams.put("packageFilter", option);
     }

@@ -85,7 +85,9 @@ public class Ips2PlantToolWindowPanel extends JPanel {
     private static final String TOOLTIP_SHOW_PRODUCT_COMPONENTS = "Show product components";
     private static final String TOOLTIP_CLEAR_DEPENDENCIES = "Clear all resolved dependencies and remove them from the tree";
     private static final String TOOLTIP_RESOLVE_DEPENDENCIES = "Resolve model directories in dependencies";
-    private static final String TOOLTIP_PACKAGE_FILTER = "Filter the diagram by packages (comma separated list)";
+    private static final String TOOLTIP_PACKAGE_FILTER = "<html>Filter the diagram by package prefixes (comma separated list)<br>"
+            + "<code>!prefix</code> excludes, <code>*</code> includes all; the longest matching prefix wins<br>"
+            + "e.g. <code>*,!coverage,coverage.Foo</code></html>";
     private static final String TOOLTIP_CONNECTOR_LENGTH = "Length of association connectors";
     private static final String TOOLTIP_GENERATE = "Generate PlantUML from selected IPS model directories";
     private static final String TOOLTIP_SEARCH_FIELD = "Search for IPS classes by name. Supports * wildcard (e.g. *Contract*) and regex (e.g. Contract|Policy, Policy.*Type). Emptying the field clears the search.";
